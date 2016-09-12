@@ -1,0 +1,165 @@
+@font-face {
+    font-family: 'icomoon-widget';
+    src:    url('fonts/icomoon-widget.eot?vjw8n1');
+    src:    url('fonts/icomoon-widget.eot?vjw8n1#iefix') format('embedded-opentype'),
+        url('fonts/icomoon-widget.ttf?vjw8n1') format('truetype'),
+        url('fonts/icomoon-widget.woff?vjw8n1') format('woff'),
+        url('fonts/icomoon-widget.svg?vjw8n1#icomoon-widget') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+    /* use !important to prevent issues with browser extensions that change fonts */
+    font-family: 'icomoon-widget' !important;
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-rooms-garage3:before {
+    content: "\e903";
+}
+.icon-rooms-house100:before {
+    content: "\e908";
+}
+.icon-light-living:before {
+    content: "\e90d";
+}
+.icon-rooms-livingroom1:before {
+    content: "\e90f";
+}
+.icon-rooms-livingroom15:before {
+    content: "\e910";
+}
+.icon-restaurant-dining8:before {
+    content: "\e911";
+}
+.icon-rooms-dining3:before {
+    content: "\e912";
+}
+.icon-rooms-grass:before {
+    content: "\e913";
+}
+.icon-rooms-livingroom8:before {
+    content: "\e914";
+}
+.icon-rooms-beds12:before {
+    content: "\e915";
+}
+.icon-locked43:before {
+    content: "\e916";
+}
+.icon-number5:before {
+    content: "\e917";
+}
+.icon-number4:before {
+    content: "\e918";
+}
+.icon-number3:before {
+    content: "\e919";
+}
+.icon-number2:before {
+    content: "\e91a";
+}
+.icon-number1:before {
+    content: "\e91b";
+}
+.icon-music-radio57:before {
+    content: "\e91c";
+}
+.icon-light-livingroom20:before {
+    content: "\e91d";
+}
+.icon-light-256:before {
+    content: "\e91e";
+}
+.icon-light-chandelier1:before {
+    content: "\e900";
+}
+.icon-light-off:before {
+    content: "\e901";
+}
+.icon-fire:before {
+    content: "\e904";
+}
+.icon-light-Idea:before {
+    content: "\e905";
+}
+.icon-music-radio:before {
+    content: "\e902";
+}
+.icon-light-lamp2:before {
+    content: "\e906";
+}
+.icon-light-switch:before {
+    content: "\e907";
+}
+.icon-cord:before {
+    content: "\e909";
+}
+.icon-tv:before {
+    content: "\e90a";
+}
+.icon-restaurant_menu:before {
+    content: "\e90c";
+}
+.icon-music-volume_off:before {
+    content: "\e90e";
+}
+.icon-music:before {
+    content: "\f001";
+}
+.icon-tv-film:before {
+    content: "\f008";
+}
+.icon-power-off:before {
+    content: "\f011";
+}
+.icon-home:before {
+    content: "\f015";
+}
+.icon-play-circle-o:before {
+    content: "\f01d";
+}
+.icon-music-volume-down:before {
+    content: "\f027";
+}
+.icon-music-volume-up:before {
+    content: "\f028";
+}
+.icon-player-step-backward:before {
+    content: "\f048";
+}
+.icon-player-play:before {
+    content: "\f04b";
+}
+.icon-player-pause:before {
+    content: "\f04c";
+}
+.icon-stop:before {
+    content: "\f04d";
+}
+.icon-player-forward:before {
+    content: "\f04e";
+}
+.icon-player-fast-forward:before {
+    content: "\f050";
+}
+.icon-player-step-forward:before {
+    content: "\f051";
+}
+.icon-music-aspotify:before {
+    content: "\f1bc";
+}
+.icon-stop-circle-o:before {
+    content: "\f28e";
+}
+

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="net.yourhome.app">
+
+    <application
+        tools:replace="android:label"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name_plus"
+        android:theme="@style/AppTheme"
+        android:name="net.yourhome.app.util.Application">
+
+        <activity
+            android:name="net.yourhome.app.net.discovery.DiscoveryActivity"
+            android:label="@string/title_server_discovery" />
+
+         <!--  Widgets -->
+	     <activity 
+	         android:name="net.yourhome.app.widget.WidgetConfigurationActivity"
+	         android:label="@string/title_new_widget" 
+             android:configChanges="" >
+	       <intent-filter>  
+	            <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />  
+	       </intent-filter>  
+	     </activity>  
+     
+          <receiver android:name="net.yourhome.app.widget.HomeWidgetProvider" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.appwidget.action.APPWIDGET_DELETED" />
+		  		<action android:name="net.yourhome.controller.widget.WIDGET_ACTION"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/appwidgetproviderinfo_small" />
+         </receiver>
+
+    </application>
+    
+
+</manifest>

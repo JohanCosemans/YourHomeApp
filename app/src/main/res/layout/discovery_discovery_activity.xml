@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal" >	
+
+			 <Button
+			     android:id="@+id/btn_search"
+			     android:layout_width="wrap_content"
+			     android:layout_height="wrap_content"
+			     android:layout_weight="0.02"
+			     android:drawablePadding="8dip"
+			     android:text="@string/btn_discover" />
+
+            <Button
+                android:id="@+id/btn_manual"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.02"
+                android:drawablePadding="8dip"
+                android:text="@string/btn_manual" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="0dip"
+        android:layout_weight="1" >
+
+        <LinearLayout
+            android:id="@+id/discovery_loading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:gravity="top|left|center_vertical" >
+
+            <ProgressBar
+                android:id="@+id/discovery_loading_bar"
+                style="@android:attr/progressBarStyleLarge"
+	            android:layout_width="wrap_content"
+	            android:layout_height="fill_parent" />
+
+            <TextView
+                android:id="@+id/discovery_loading_txt"
+               android:layout_width="wrap_content"
+		            android:layout_height="wrap_content"
+		        	android:textAppearance="?android:attr/textAppearanceMedium"
+		        	android:paddingLeft="5dip"
+                android:text="@string/discovery_searching" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/discovery_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:gravity="top|left|center_vertical" >
+
+            <TextView
+                android:id="@+id/TextView01"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="5dip"
+                android:text="@string/discovery_description"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/output"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_marginTop="10dp"
+            android:cacheColorHint="#000000"
+            android:dividerHeight="0dip" />
+
+    </FrameLayout>
+
+</LinearLayout>

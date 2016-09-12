@@ -1,0 +1,22 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" 
+    android:id="@+id/playlistListLayout"
+    >
+
+    <TextView
+        android:id="@+id/chooseAccount"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/spotify_choose_account"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+    
+    <RadioGroup 
+        android:id="@+id/spotifyAccountSelector"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+    	android:orientation="vertical">
+	</RadioGroup>
+
+</LinearLayout>

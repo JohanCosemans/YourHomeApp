@@ -1,0 +1,36 @@
+<resources>
+
+    <color name="default_icon_color">#00000000</color>
+    <color name="black_overlay">#66000000</color>
+    <color name="white">#ffffff</color>
+
+    <color name="grey">#cccccc</color>
+    <color name="grey2">#d2d2d2</color>
+    <color name="orange1">#ff9900</color>
+    <color name="orange2">#ff6600</color>
+    <color name="orange3">#ff3300</color>
+    
+    <!-- <color name="list_background">#303030</color>
+    <color name="list_background_pressed">#992416</color>
+    <color name="list_divider">#272727</color> -->
+    <color name="list_background">#ebebeb</color>
+    <color name="list_background_pressed">#992416</color>
+    <color name="list_divider">#272727</color>
+    <color name="list_item_title">#000000</color>
+
+    <array name="color_picker_colors">
+        <item>#ffffff</item>
+        <item>#ffffff</item>
+        <item>#F44336</item>
+        <item>#9C27B0</item>
+        <item>#3F51B5</item>
+        <item>#03A9F4</item>
+        <item>#009688</item>
+        <item>#8BC34A</item>
+        <item>#FFEB3B</item>
+        <item>#FF9800</item>
+        <item>#795548</item>
+        <item>#607D8B</item>
+    </array>
+
+</resources>

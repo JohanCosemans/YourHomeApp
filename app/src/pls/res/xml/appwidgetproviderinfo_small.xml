@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"  
+    android:configure="net.yourhome.app.widget.WidgetConfigurationActivity"
+    android:initialLayout="@layout/widget_single_button"
+    android:minHeight="40dp"
+    android:minWidth="40dp"
+    android:updatePeriodMillis="21600000"
+    android:resizeMode="horizontal|vertical">
+</appwidget-provider>

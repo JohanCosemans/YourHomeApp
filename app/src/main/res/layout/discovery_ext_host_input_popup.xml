@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/popupIPInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <RelativeLayout
+                android:id="@+id/lbl_inp_ext_hostname"
+                android:layout_width="374dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" >
+
+				
+
+                <TextView
+                    android:id="@+id/lbl_ext_hostname"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBaseline="@+id/discovery_ip_input_ext_ip_hostname"
+                    android:layout_alignBottom="@+id/discovery_ip_input_ext_ip_hostname"
+                    android:layout_alignParentLeft="true"
+                    android:layout_marginRight="10dp"
+                    android:text="@string/lbl_ext_hostname" />
+                
+                <EditText
+                    android:id="@+id/discovery_ip_input_ext_ip_hostname"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_toRightOf="@id/lbl_ext_hostname"
+                    android:ems="50" />
+
+                <LinearLayout
+                    android:id="@+id/linearLayout1"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="false"
+                    android:layout_below="@id/discovery_ip_input_ext_ip_hostname"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center|right" >
+
+                    <Button
+                        android:id="@+id/discovery_ext_ip_input_popup_cancel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.1"
+                        android:text="@string/btn_discover_cancel" />
+
+                    <Button
+                        android:id="@+id/discovery_ext_ip_input_popup_ok"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.1"
+                        android:text="@string/btn_ok" />
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/discoveryLoader"
+                    style="@android:attr/progressBarStyleLarge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_toRightOf="@+id/lbl_ext_hostname" 
+  			     	android:visibility="gone" />
+                
+            </RelativeLayout>
+
+            
+        </FrameLayout>

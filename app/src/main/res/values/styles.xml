@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Base application theme, dependent on API level. This theme is replaced
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+
+    -->
+    <style name="AppBaseTheme" parent="android:Theme.Holo.Light">
+        <!-- API 14 theme customizations can go here. -->
+    </style>
+    
+    <style name="AppTheme" parent="AppBaseTheme">
+    </style>
+    
+    <style name="CanvasTheme" parent="AppTheme">
+         <item name="android:typeface">monospace</item> <!-- Monospace is overwritten by custom font (see Application) -->
+    </style>
+    
+    
+    <!-- 
+    <style name="ButtonBarButton" />
+
+    <style name="ButtonBar">
+        <item name="android:paddingLeft">2dp</item>
+        <item name="android:paddingTop">5dp</item>
+        <item name="android:paddingRight">2dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:background">@android:drawable/bottom_bar</item>
+    </style>
+-->
+    <style name="FullscreenTheme" parent="@android:style/Theme.Holo.Light.NoActionBar.Fullscreen">
+        
+        <!--
+            <item name="android:windowBackground">@android:color/transparent</item>
+            <item name="android:windowIsTranslucent">true</item>
+            <item name="android:colorBackgroundCacheHint">@null</item>
+
+
+            <item name="android:windowContentOverlay">@null</item>
+            <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+            <item name="android:windowSoftInputMode">stateUnspecified|adjustPan</item>
+            <item name="android:windowCloseOnTouchOutside">true</item>
+            <item name="android:windowActionModeOverlay">true</item>
+            <item name="android:background">#CCB0AAAA</item>
+        <item name="android:windowFrame">@null</item>
+
+        <item name="android:windowBackground">@android:color/holo_purple</item>
+        <item name="android:windowIsTranslucent">false</item>
+        -->
+
+        
+        
+        <!-- <item name="android:typeface">monospace</item> -->
+     </style>
+    
+    <!-- <style name="SensorGraph" parent="@android:style/Theme.Translucent.NoTitleBar"> -->
+    <style name="SensorGraph" parent="@android:style/Theme.Holo.Light.NoActionBar.Fullscreen">
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="android:windowSoftInputMode">stateUnspecified|adjustPan</item>
+        <item name="android:windowCloseOnTouchOutside">true</item>
+        <item name="android:windowActionModeOverlay">true</item>"
+        <item name="android:windowBackground">@android:color/transparent</item> 
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <!-- <item name="android:typeface">monospace</item> -->
+  	</style>
+  	
+    <style name="WideDialog" parent="android:style/Theme.Holo.Light.Dialog">
+        <!-- API 14 theme customizations can go here. -->
+        <!-- <item name="android:typeface">monospace</item> -->
+    </style>
+    
+    <style name="DialogMinWidth" parent="android:style/Theme.Holo.Light.Dialog.MinWidth">
+        <!-- API 14 theme customizations can go here. -->
+        <!-- <item name="android:typeface">monospace</item> -->
+    </style>
+    
+     <style name="Dialog" parent="android:style/Theme.Holo.Light.Dialog">
+        <!-- API 14 theme customizations can go here. -->
+        <!-- <item name="android:typeface">monospace</item> -->
+         <item name="android:indeterminateProgressStyle">@style/ActionBarProgressBar.Loader</item>
+    </style>
+    <style name="ActionBarProgressBar.Loader" parent="@android:style/Widget.Holo.ProgressBar.Small">
+        <item name="android:minWidth">48dp</item>
+        <item name="android:maxWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:maxHeight">48dp</item>
+    </style>
+</resources>
