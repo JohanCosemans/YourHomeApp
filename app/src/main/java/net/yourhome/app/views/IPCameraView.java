@@ -1,18 +1,33 @@
+/*-
+ * Copyright (c) 2016 Coteq, Johan Cosemans
+ * All rights reserved.
+ *
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 package net.yourhome.app.views;
-
-import java.security.InvalidParameterException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import net.yourhome.app.bindings.BindingController;
-import net.yourhome.app.bindings.IPCameraBinding;
-import net.yourhome.app.canvas.CanvasFragment;
-import net.yourhome.app.net.HomeServerConnector;
-import net.yourhome.app.util.Configuration;
-import net.yourhome.app.util.Util;
-import net.yourhome.app.views.UIEvent.Types;
-import net.yourhome.app.R;
 
 import android.app.Activity;
 import android.content.Context;
@@ -27,44 +42,54 @@ import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
+import net.yourhome.app.R;
+import net.yourhome.app.bindings.BindingController;
+import net.yourhome.app.bindings.IPCameraBinding;
+import net.yourhome.app.canvas.CanvasFragment;
+import net.yourhome.app.net.HomeServerConnector;
+import net.yourhome.app.util.Configuration;
+import net.yourhome.app.util.Util;
+import net.yourhome.app.views.UIEvent.Types;
 
 public class IPCameraView extends ButtonView {
-		
+
 	public IPCameraView(CanvasFragment canvas, String stageItemId, JSONObject viewProperties, JSONObject bindingProperties) throws JSONException {
-		super(canvas,stageItemId,viewProperties, bindingProperties);
-		loader = new ProgressBar(canvas.getActivity());
-		this.layout.addView(loader);
-        setLoaderState(View.GONE);
+		super(canvas, stageItemId, viewProperties, bindingProperties);
+		this.loader = new ProgressBar(canvas.getActivity());
+		this.layout.addView(this.loader);
+		this.setLoaderState(View.GONE);
 	}
-			
+
+	@Override
 	public void setLoaderState(final int state) {
-		if(canvas == null || canvas.getActivity() == null) {
+		if (this.canvas == null || this.canvas.getActivity() == null) {
 			Context mainContext = HomeServerConnector.getInstance().getMainContext();
-			if(mainContext != null && mainContext instanceof Activity) {
-				((Activity)mainContext).runOnUiThread(new Runnable() {
-		            @Override
-		            public void run() {
-		        		loader.setVisibility(state);
-		            }
+			if (mainContext != null && mainContext instanceof Activity) {
+				((Activity) mainContext).runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						IPCameraView.this.loader.setVisibility(state);
+					}
 				});
 			}
-		}else {
-			canvas.getActivity().runOnUiThread(new Runnable() {
-	            @Override
-	            public void run() {
-	        		loader.setVisibility(state);
-	            }
+		} else {
+			this.canvas.getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					IPCameraView.this.loader.setVisibility(state);
+				}
 			});
 		}
 	}
+
 	public void setOnClickListener(final Activity activity) {
 
 		OnClickListener onClickListener = new OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
-				if(binding != null && binding instanceof IPCameraBinding) {
-					binding.viewPressed(me, new UIEvent(Types.EMPTY));
+				if (IPCameraView.this.binding != null && IPCameraView.this.binding instanceof IPCameraBinding) {
+					IPCameraView.this.binding.viewPressed(IPCameraView.this.me, new UIEvent(Types.EMPTY));
 				}
 			}
 		};
@@ -72,45 +97,48 @@ public class IPCameraView extends ButtonView {
 	}
 
 	public void addBinding(JSONObject bindingProperties) {
-		this.binding = BindingController.getInstance().getBindingFor(getStageElementId());
-        this.binding.addViewListener(this);
+		this.binding = BindingController.getInstance().getBindingFor(this.getStageElementId());
+		this.binding.addViewListener(this);
 	}
-    public static void createBinding(String stageItemId, JSONObject bindingProperties) {
-        try {
-            new IPCameraBinding(stageItemId, bindingProperties);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
+
+	public static void createBinding(String stageItemId, JSONObject bindingProperties) {
+		try {
+			new IPCameraBinding(stageItemId, bindingProperties);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	public void buildView(JSONObject viewProperties) throws JSONException {
 		super.buildView(viewProperties);
 		Bitmap refreshBitmap = Configuration.getInstance().getAppIcon(HomeServerConnector.getInstance().getMainContext(), R.string.icon_refresh, 30, Color.WHITE);
 		Bitmap refreshBitmapShadow = Util.addShadow(refreshBitmap, refreshBitmap.getHeight(), refreshBitmap.getWidth(), Color.BLACK, 1, 1, 1);
-		
-		ImageButton refreshButton = new ImageButton(canvas.getActivity());
+
+		ImageButton refreshButton = new ImageButton(this.canvas.getActivity());
 		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 		params.setMargins(0, 0, 10, 10);
-		refreshButton.setBackground(new BitmapDrawable(HomeServerConnector.getInstance().getMainContext().getResources(),refreshBitmapShadow));
-		layout.addView(refreshButton, params);
+		refreshButton.setBackground(new BitmapDrawable(HomeServerConnector.getInstance().getMainContext().getResources(), refreshBitmapShadow));
+		this.layout.addView(refreshButton, params);
 		refreshButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				((IPCameraBinding)binding).refreshSnapshot();
+				((IPCameraBinding) IPCameraView.this.binding).refreshSnapshot();
 			}
 		});
 	}
-	
+
+	@Override
 	public void refreshView() {
-		if(binding != null) {
-			Bitmap bitmap = ((IPCameraBinding)binding).getImage();
-			Drawable bitmapDrawable = new BitmapDrawable(button.getResources(),bitmap);
-			if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-				button.setBackground(bitmapDrawable);
-			}else {
-				button.setBackgroundDrawable(bitmapDrawable);
+		if (this.binding != null) {
+			Bitmap bitmap = ((IPCameraBinding) this.binding).getImage();
+			Drawable bitmapDrawable = new BitmapDrawable(this.button.getResources(), bitmap);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+				this.button.setBackground(bitmapDrawable);
+			} else {
+				this.button.setBackgroundDrawable(bitmapDrawable);
 			}
 		}
 	}

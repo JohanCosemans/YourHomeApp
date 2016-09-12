@@ -19,34 +19,32 @@
 package de.tavendo.autobahn;
 
 public class WampCraPermissions {
-    
-    public WampCraRpcPermission[] rpc;
-    public WampCraPubSubPermission[] pubsub;
-    
-    public WampCraPermissions() {
-    }
 
-    public WampCraPermissions(WampCraRpcPermission[] rpc, WampCraPubSubPermission[] pubsub) {
-        this.rpc = rpc;
-        this.pubsub = pubsub;
-    }
+	public WampCraRpcPermission[] rpc;
+	public WampCraPubSubPermission[] pubsub;
 
-    public WampCraRpcPermission[] getRpc() {
-        return rpc;
-    }
+	public WampCraPermissions() {
+	}
 
-    public void setRpc(WampCraRpcPermission[] rpc) {
-        this.rpc = rpc;
-    }
+	public WampCraPermissions(WampCraRpcPermission[] rpc, WampCraPubSubPermission[] pubsub) {
+		this.rpc = rpc;
+		this.pubsub = pubsub;
+	}
 
-    public WampCraPubSubPermission[] getPubsub() {
-        return pubsub;
-    }
+	public WampCraRpcPermission[] getRpc() {
+		return this.rpc;
+	}
 
-    public void setPubsub(WampCraPubSubPermission[] pubsub) {
-        this.pubsub = pubsub;
-    }
-    
-    
-    
+	public void setRpc(WampCraRpcPermission[] rpc) {
+		this.rpc = rpc;
+	}
+
+	public WampCraPubSubPermission[] getPubsub() {
+		return this.pubsub;
+	}
+
+	public void setPubsub(WampCraPubSubPermission[] pubsub) {
+		this.pubsub = pubsub;
+	}
+
 }

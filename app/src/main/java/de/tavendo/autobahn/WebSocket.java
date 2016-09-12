@@ -1,92 +1,128 @@
+/*-
+ * Copyright (c) 2016 Coteq, Johan Cosemans
+ * All rights reserved.
+ *
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 package de.tavendo.autobahn;
 
 public interface WebSocket {
-   
+
 	/**
-    * Session handler for WebSocket sessions.
-    */
-   public interface ConnectionHandler {
+	 * Session handler for WebSocket sessions.
+	 */
+	public interface ConnectionHandler {
 
-	   /**
-	    * Connection was closed normally.
-	    */
-	   public static final int CLOSE_NORMAL = 1;
+		/**
+		 * Connection was closed normally.
+		 */
+		public static final int CLOSE_NORMAL = 1;
 
-	   /**
-	    * Connection could not be established in the first place.
-	    */
-	   public static final int CLOSE_CANNOT_CONNECT = 2;
+		/**
+		 * Connection could not be established in the first place.
+		 */
+		public static final int CLOSE_CANNOT_CONNECT = 2;
 
-	   /**
-	    * A previously established connection was lost unexpected.
-	    */
-	   public static final int CLOSE_CONNECTION_LOST = 3;
+		/**
+		 * A previously established connection was lost unexpected.
+		 */
+		public static final int CLOSE_CONNECTION_LOST = 3;
 
-	   /**
-	    * The connection was closed because a protocol violation
-	    * occurred.
-	    */
-	   public static final int CLOSE_PROTOCOL_ERROR = 4;
+		/**
+		 * The connection was closed because a protocol violation occurred.
+		 */
+		public static final int CLOSE_PROTOCOL_ERROR = 4;
 
-	   /**
-	    * Internal error.
-	    */
-	   public static final int CLOSE_INTERNAL_ERROR = 5;
-	   
-	   /**
-	    * Server returned error while connecting
-	    */
-	   public static final int CLOSE_SERVER_ERROR = 6;
-	   
-	   /**
-	    * Server connection lost, scheduled reconnect
-	    */
-	   public static final int CLOSE_RECONNECT = 7;
+		/**
+		 * Internal error.
+		 */
+		public static final int CLOSE_INTERNAL_ERROR = 5;
 
-	   /**
-	    * Fired when the WebSockets connection has been established.
-	    * After this happened, messages may be sent.
-	    */
-	   public void onOpen();
+		/**
+		 * Server returned error while connecting
+		 */
+		public static final int CLOSE_SERVER_ERROR = 6;
 
-	   /**
-	    * Fired when the WebSockets connection has deceased (or could
-	    * not established in the first place).
-	    *
-	    * @param code       Close code.
-	    * @param reason     Close reason (human-readable).
-	    */
-	   public void onClose(int code, String reason);
+		/**
+		 * Server connection lost, scheduled reconnect
+		 */
+		public static final int CLOSE_RECONNECT = 7;
 
-	   /**
-	    * Fired when a text message has been received (and text
-	    * messages are not set to be received raw).
-	    *
-	    * @param payload    Text message payload or null (empty payload).
-	    */
-	   public void onTextMessage(String payload);
+		/**
+		 * Fired when the WebSockets connection has been established. After this
+		 * happened, messages may be sent.
+		 */
+		public void onOpen();
 
-	   /**
-	    * Fired when a text message has been received (and text
-	    * messages are set to be received raw).
-	    *
-	    * @param payload    Text message payload as raw UTF-8 or null (empty payload).
-	    */
-	   public void onRawTextMessage(byte[] payload);
+		/**
+		 * Fired when the WebSockets connection has deceased (or could not
+		 * established in the first place).
+		 *
+		 * @param code
+		 *            Close code.
+		 * @param reason
+		 *            Close reason (human-readable).
+		 */
+		public void onClose(int code, String reason);
 
-	   /**
-	    * Fired when a binary message has been received.
-	    *
-	    * @param payload    Binar message payload or null (empty payload).
-	    */
-	   public void onBinaryMessage(byte[] payload);
-   }
+		/**
+		 * Fired when a text message has been received (and text messages are
+		 * not set to be received raw).
+		 *
+		 * @param payload
+		 *            Text message payload or null (empty payload).
+		 */
+		public void onTextMessage(String payload);
 
-   public void connect(String wsUri, ConnectionHandler wsHandler) throws WebSocketException;
-   public void connect(String wsUri, ConnectionHandler wsHandler, WebSocketOptions options) throws WebSocketException;
-   public void disconnect();
-   public boolean isConnected();
-   public void sendBinaryMessage(byte[] payload);
-   public void sendRawTextMessage(byte[] payload);
-   public void sendTextMessage(String payload);
+		/**
+		 * Fired when a text message has been received (and text messages are
+		 * set to be received raw).
+		 *
+		 * @param payload
+		 *            Text message payload as raw UTF-8 or null (empty payload).
+		 */
+		public void onRawTextMessage(byte[] payload);
+
+		/**
+		 * Fired when a binary message has been received.
+		 *
+		 * @param payload
+		 *            Binar message payload or null (empty payload).
+		 */
+		public void onBinaryMessage(byte[] payload);
+	}
+
+	public void connect(String wsUri, ConnectionHandler wsHandler) throws WebSocketException;
+
+	public void connect(String wsUri, ConnectionHandler wsHandler, WebSocketOptions options) throws WebSocketException;
+
+	public void disconnect();
+
+	public boolean isConnected();
+
+	public void sendBinaryMessage(byte[] payload);
+
+	public void sendRawTextMessage(byte[] payload);
+
+	public void sendTextMessage(String payload);
 }

@@ -1,15 +1,43 @@
+/*-
+ * Copyright (c) 2016 Coteq, Johan Cosemans
+ * All rights reserved.
+ *
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 package net.yourhome.app.canvas;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.util.Log;
 import android.view.ViewGroup;
-
-import net.yourhome.app.util.Configuration;
 import net.yourhome.app.views.ButtonView;
 import net.yourhome.app.views.ClockAnalogView;
 import net.yourhome.app.views.ClockDigitalView;
@@ -25,179 +53,177 @@ import net.yourhome.app.views.TextView;
 import net.yourhome.app.views.WebLinkView;
 import net.yourhome.app.views.WebRSSView;
 import net.yourhome.app.views.WebStaticHtmlView;
-import net.yourhome.app.views.musicplayer.PlaylistSelectorActivity;
-import net.yourhome.app.views.musicplayer.views.AlbumImageView;
 import net.yourhome.app.views.musicplayer.views.MusicPlayerView;
-import net.yourhome.app.views.musicplayer.views.PlaylistView;
-import net.yourhome.app.views.musicplayer.views.TrackDisplayView;
-import net.yourhome.app.views.musicplayer.views.TrackProgressView;
 import net.yourhome.common.base.enums.ViewTypes;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+public class CanvasFragmentAdapter extends FragmentPagerAdapter {
 
-public class CanvasFragmentAdapter extends FragmentPagerAdapter  {
+	// private List<Fragment> fragments = new ArrayList<Fragment>();
+	private JSONObject activeConfiguration;
+	public static int LOOPS_COUNT = 10000;
+	private int realCount = -1;
 
-    //private List<Fragment> fragments = new ArrayList<Fragment>();
-    private JSONObject activeConfiguration;
-    public static int LOOPS_COUNT = 10000;
-    private int realCount = -1;
+	public CanvasFragmentAdapter(FragmentManager fm, JSONObject activeConfiguration) {
+		super(fm);
+		this.activeConfiguration = activeConfiguration;
+	}
 
-    public CanvasFragmentAdapter(FragmentManager fm, JSONObject activeConfiguration) {
-        super(fm);
-        this.activeConfiguration = activeConfiguration;
-    }
-    public JSONObject getPageDefinition(int i) throws JSONException {
-        return activeConfiguration.getJSONArray("pages").getJSONObject(i);
-    }
-    public List<String> initializeBindings() {
-        List<String> menuList = new ArrayList<String>();
-        if(activeConfiguration != null) {
-            JSONArray pages;
-            try {
-                pages = activeConfiguration.getJSONArray("pages");
-                for(int i=0;i<pages.length();i++) {
-                    JSONObject page;
-                    try {
-                        page = pages.getJSONObject(i);
-                        String title = page.getString("title");
-                        menuList.add(title);
+	public JSONObject getPageDefinition(int i) throws JSONException {
+		return this.activeConfiguration.getJSONArray("pages").getJSONObject(i);
+	}
 
-                        // Initialize all bindings when we're at it
-                        JSONArray viewObjects = page.getJSONArray("objects");
-                        for (int j = 0; j < viewObjects.length(); j++) {
-                            try {
-                                JSONObject viewObject = viewObjects.getJSONObject(j);
-                                JSONObject viewProperties = viewObject.getJSONObject("viewProperties");
-                                String stageObjectId = viewObject.getString("id");
-                                JSONObject bindingProperties = null;
-                                if(viewObject.has("bindingProperties")) {
-                                    try {
-                                        bindingProperties = viewObject.getJSONObject("bindingProperties");
-                                    }catch(JSONException e) {}
-                                }
-                                ViewTypes type = ViewTypes.convert(viewProperties.getString("type"));
-                                switch(type) {
-                                    case IMAGE:
-                                        PictureView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case SHAPE:
-                                        ShapeView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case IMAGE_BUTTON:
-                                        ButtonView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case SLIDER:
-                                        SliderView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case SENSOR:
-                                    case SENSOR_WITH_INDICATOR:
-                                        SensorView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case  TRACK_DISPLAY:
-                                        MusicPlayerView.createBinding(stageObjectId, bindingProperties);
-                                        break;
-                                    case TRACK_PROGRESS:
-                                        MusicPlayerView.createBinding(stageObjectId, bindingProperties);
-                                        break;
-                                    case ALBUM_IMAGE:
-                                        MusicPlayerView.createBinding(stageObjectId, bindingProperties);
-                                        break;
-                                    case PLAYLIST:
-                                        MusicPlayerView.createBinding(stageObjectId, bindingProperties);
-                                        break;
-                                    case PLAYLISTS:
-                                        ButtonView.createBinding(stageObjectId, bindingProperties);
-                                        break;
-                                    case CAMERA:
-                                        IPCameraView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case MULTI_STATE_BUTTON:
-                                        MultiStateButtonView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case PLUS_MIN_VALUE:
-                                        PlusMinView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case CLOCK_ANALOG:
-                                        ClockAnalogView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case CLOCK_DIGITAL:
-                                        ClockDigitalView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case TEXT:
-                                        TextView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case WEB_LINK:
-                                        WebLinkView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case WEB_RSS:
-                                        WebRSSView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case WEB_STATIC_HTML:
-                                        WebStaticHtmlView.createBinding(stageObjectId,bindingProperties);
-                                        break;
-                                    case COLOR_PICKER:
-                                        ColorPickerView.createBinding(stageObjectId, bindingProperties);
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }catch(JSONException e) {}
-                }
-            } catch (JSONException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
-            //String orientationString = activeConfiguration.getString("orientation");
-            return menuList;
-        }else {
-            Log.d("Configuration" , "activeConfiguration null!!!");
-        }
-        return null;
-    }
-    @Override
-    public Fragment getItem(int position) {
-        Log.d("CanvasFragmentAdapter", "Get fragment on position "+position);
-        if(position < 2) {
-            return new Fragment();
-        }
+	public List<String> initializeBindings() {
+		List<String> menuList = new ArrayList<String>();
+		if (this.activeConfiguration != null) {
+			JSONArray pages;
+			try {
+				pages = this.activeConfiguration.getJSONArray("pages");
+				for (int i = 0; i < pages.length(); i++) {
+					JSONObject page;
+					try {
+						page = pages.getJSONObject(i);
+						String title = page.getString("title");
+						menuList.add(title);
 
-        if (activeConfiguration != null && getRealCount() > 0)
-        {
-            int actualPosition = position % getRealCount();
-            return CanvasFragment.newInstance(actualPosition, this);
-        }
-        return null;
+						// Initialize all bindings when we're at it
+						JSONArray viewObjects = page.getJSONArray("objects");
+						for (int j = 0; j < viewObjects.length(); j++) {
+							try {
+								JSONObject viewObject = viewObjects.getJSONObject(j);
+								JSONObject viewProperties = viewObject.getJSONObject("viewProperties");
+								String stageObjectId = viewObject.getString("id");
+								JSONObject bindingProperties = null;
+								if (viewObject.has("bindingProperties")) {
+									try {
+										bindingProperties = viewObject.getJSONObject("bindingProperties");
+									} catch (JSONException e) {
+									}
+								}
+								ViewTypes type = ViewTypes.convert(viewProperties.getString("type"));
+								switch (type) {
+								case IMAGE:
+									PictureView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case SHAPE:
+									ShapeView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case IMAGE_BUTTON:
+									ButtonView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case SLIDER:
+									SliderView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case SENSOR:
+								case SENSOR_WITH_INDICATOR:
+									SensorView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case TRACK_DISPLAY:
+									MusicPlayerView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case TRACK_PROGRESS:
+									MusicPlayerView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case ALBUM_IMAGE:
+									MusicPlayerView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case PLAYLIST:
+									MusicPlayerView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case PLAYLISTS:
+									ButtonView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case CAMERA:
+									IPCameraView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case MULTI_STATE_BUTTON:
+									MultiStateButtonView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case PLUS_MIN_VALUE:
+									PlusMinView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case CLOCK_ANALOG:
+									ClockAnalogView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case CLOCK_DIGITAL:
+									ClockDigitalView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case TEXT:
+									TextView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case WEB_LINK:
+									WebLinkView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case WEB_RSS:
+									WebRSSView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case WEB_STATIC_HTML:
+									WebStaticHtmlView.createBinding(stageObjectId, bindingProperties);
+									break;
+								case COLOR_PICKER:
+									ColorPickerView.createBinding(stageObjectId, bindingProperties);
+									break;
+								default:
+									break;
+								}
+							} catch (JSONException e) {
+								e.printStackTrace();
+							}
+						}
+					} catch (JSONException e) {
+					}
+				}
+			} catch (JSONException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			// String orientationString =
+			// activeConfiguration.getString("orientation");
+			return menuList;
+		} else {
+			Log.d("Configuration", "activeConfiguration null!!!");
+		}
+		return null;
+	}
 
-    }
+	@Override
+	public Fragment getItem(int position) {
+		Log.d("CanvasFragmentAdapter", "Get fragment on position " + position);
+		if (position < 2) {
+			return new Fragment();
+		}
 
-    @Override
-    public int getCount() {
-        return getRealCount()*LOOPS_COUNT;
-    }
-    public int getRealCount() {
-        if(realCount < 0) {
-            Integer length = null;
-            try {
-                realCount = activeConfiguration.getJSONArray("pages").length();
-            } catch (JSONException e) {}
-        }
-        return realCount;
-    }
+		if (this.activeConfiguration != null && this.getRealCount() > 0) {
+			int actualPosition = position % this.getRealCount();
+			return CanvasFragment.newInstance(actualPosition, this);
+		}
+		return null;
 
-    @Override
-    public void destroyItem(ViewGroup container, int position, Object object) {
-        Log.d("CanvasFragmentAdapter", "Destroy fragment on position:  "+position);
-        FragmentManager manager = ((Fragment) object).getFragmentManager();
-        android.support.v4.app.FragmentTransaction trans = manager.beginTransaction();
-        trans.remove((Fragment) object);
-        trans.commit();
+	}
 
-        super.destroyItem(container, position, object);
-    }
+	@Override
+	public int getCount() {
+		return this.getRealCount() * CanvasFragmentAdapter.LOOPS_COUNT;
+	}
+
+	public int getRealCount() {
+		if (this.realCount < 0) {
+			Integer length = null;
+			try {
+				this.realCount = this.activeConfiguration.getJSONArray("pages").length();
+			} catch (JSONException e) {
+			}
+		}
+		return this.realCount;
+	}
+
+	@Override
+	public void destroyItem(ViewGroup container, int position, Object object) {
+		Log.d("CanvasFragmentAdapter", "Destroy fragment on position:  " + position);
+		FragmentManager manager = ((Fragment) object).getFragmentManager();
+		android.support.v4.app.FragmentTransaction trans = manager.beginTransaction();
+		trans.remove((Fragment) object);
+		trans.commit();
+
+		super.destroyItem(container, position, object);
+	}
 }

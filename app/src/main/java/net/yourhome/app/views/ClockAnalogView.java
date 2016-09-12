@@ -1,17 +1,35 @@
+/*-
+ * Copyright (c) 2016 Coteq, Johan Cosemans
+ * All rights reserved.
+ *
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 package net.yourhome.app.views;
 
-import java.security.InvalidParameterException;
 import java.util.TimeZone;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import net.yourhome.app.bindings.AbstractBinding;
-import net.yourhome.app.bindings.BindingController;
-import net.yourhome.app.bindings.ValueBinding;
-import net.yourhome.app.canvas.CanvasFragment;
-import net.yourhome.app.util.Configuration;
-import net.yourhome.app.R;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
@@ -25,21 +43,25 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import net.yourhome.app.R;
+import net.yourhome.app.canvas.CanvasFragment;
+import net.yourhome.app.util.Configuration;
 
 public class ClockAnalogView extends DynamicView {
 
 	protected RelativeLayout relativeLayout;
-	private ImageView minuteView; 
+	private ImageView minuteView;
 	private ImageView hourView;
+
 	public ClockAnalogView(CanvasFragment canvas, String stageItemId, JSONObject viewProperties, JSONObject bindingProperties) throws JSONException {
-		super(canvas,stageItemId,viewProperties,bindingProperties);
-		buildView(viewProperties);
-		addBinding(bindingProperties);
+		super(canvas, stageItemId, viewProperties, bindingProperties);
+		this.buildView(viewProperties);
+		this.addBinding(bindingProperties);
 	}
-	
+
 	@Override
 	public View getView() {
-		return relativeLayout;
+		return this.relativeLayout;
 	}
 
 	@SuppressLint("NewApi")
@@ -47,83 +69,87 @@ public class ClockAnalogView extends DynamicView {
 	public void buildView(JSONObject viewProperties) throws JSONException {
 		super.buildView(viewProperties);
 		// Layout
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(layoutParameters.width,layoutParameters.height);
-		//params.leftMargin = layoutParameters.left;
-		//params.topMargin = layoutParameters.top;
-		relativeLayout = new RelativeLayout(canvas.getActivity());
-		relativeLayout.setLayoutParams(params);
-		relativeLayout.setRotation((float)layoutParameters.rotation);
-		relativeLayout.setX(layoutParameters.left);
-		relativeLayout.setY(layoutParameters.top);
-		
-		LayoutInflater inflater = canvas.getLayoutInflater(null);
-		inflater.inflate(R.layout.view_analog_clock, relativeLayout);
-		
+		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(this.layoutParameters.width, this.layoutParameters.height);
+		// params.leftMargin = layoutParameters.left;
+		// params.topMargin = layoutParameters.top;
+		this.relativeLayout = new RelativeLayout(this.canvas.getActivity());
+		this.relativeLayout.setLayoutParams(params);
+		this.relativeLayout.setRotation((float) this.layoutParameters.rotation);
+		this.relativeLayout.setX(this.layoutParameters.left);
+		this.relativeLayout.setY(this.layoutParameters.top);
+
+		LayoutInflater inflater = this.canvas.getLayoutInflater(null);
+		inflater.inflate(R.layout.view_analog_clock, this.relativeLayout);
+
 		double factor = 1;
-		Drawable hour = Configuration.getInstance().getAppIconDrawable(canvas.getActivity(), R.string.icon_Hourpointer, new Double(width*factor).intValue(), Color.BLACK);
-		Drawable minute = Configuration.getInstance().getAppIconDrawable(canvas.getActivity(), R.string.icon_minute, new Double(width*factor).intValue(), Color.BLACK);
-		//Drawable dial = Configuration.getInstance().getAppIconDrawable(canvas.getActivity(), R.string.icon_face1, new Double(width*factor).intValue(), Color.WHITE);
+		Drawable hour = Configuration.getInstance().getAppIconDrawable(this.canvas.getActivity(), R.string.icon_Hourpointer, new Double(this.width * factor).intValue(), Color.BLACK);
+		Drawable minute = Configuration.getInstance().getAppIconDrawable(this.canvas.getActivity(), R.string.icon_minute, new Double(this.width * factor).intValue(), Color.BLACK);
+		// Drawable dial =
+		// Configuration.getInstance().getAppIconDrawable(canvas.getActivity(),
+		// R.string.icon_face1, new Double(width*factor).intValue(),
+		// Color.WHITE);
 
-		//ImageView dialView = (ImageView) relativeLayout.findViewById(R.id.clock_face);
-		//dialView.setBackground(dial);
-		hourView = (ImageView) relativeLayout.findViewById(R.id.clock_hour);
-		hourView.setBackground(hour);
-		minuteView = (ImageView) relativeLayout.findViewById(R.id.clock_minute);
-		minuteView.setBackground(minute);
+		// ImageView dialView = (ImageView)
+		// relativeLayout.findViewById(R.id.clock_face);
+		// dialView.setBackground(dial);
+		this.hourView = (ImageView) this.relativeLayout.findViewById(R.id.clock_hour);
+		this.hourView.setBackground(hour);
+		this.minuteView = (ImageView) this.relativeLayout.findViewById(R.id.clock_minute);
+		this.minuteView.setBackground(minute);
 
-        mCalendar = new Time();
-        
+		this.mCalendar = new Time();
 
-        canvas.getActivity().getBaseContext().registerReceiver(mIntentReceiver, new IntentFilter(Intent.ACTION_TIME_TICK));
-        onTimeChanged();
+		this.canvas.getActivity().getBaseContext().registerReceiver(this.mIntentReceiver, new IntentFilter(Intent.ACTION_TIME_TICK));
+		this.onTimeChanged();
 	}
 
-    private float mMinutes;
-    private float mHour;
+	private float mMinutes;
+	private float mHour;
 	private Time mCalendar;
-	
+
 	private void onTimeChanged() {
-        mCalendar.setToNow();
+		this.mCalendar.setToNow();
 
-        int hour = mCalendar.hour;
-        int minute = mCalendar.minute;
-        int second = mCalendar.second;
+		int hour = this.mCalendar.hour;
+		int minute = this.mCalendar.minute;
+		int second = this.mCalendar.second;
 
-        mMinutes = minute + second / 60.0f;
-        mHour = hour + mMinutes / 60.0f;
-        
+		this.mMinutes = minute + second / 60.0f;
+		this.mHour = hour + this.mMinutes / 60.0f;
 
-		hourView.setRotation(mHour / 12.0f * 360.0f);
-		minuteView.setRotation(mMinutes / 60.0f * 360.0f);
-    }
+		this.hourView.setRotation(this.mHour / 12.0f * 360.0f);
+		this.minuteView.setRotation(this.mMinutes / 60.0f * 360.0f);
+	}
 
-    private final BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Intent.ACTION_TIMEZONE_CHANGED)) {
-                String tz = intent.getStringExtra("time-zone");
-                mCalendar = new Time(TimeZone.getTimeZone(tz).getID());
-            }
+	private final BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (intent.getAction().equals(Intent.ACTION_TIMEZONE_CHANGED)) {
+				String tz = intent.getStringExtra("time-zone");
+				ClockAnalogView.this.mCalendar = new Time(TimeZone.getTimeZone(tz).getID());
+			}
 
-            onTimeChanged();
-        }
-    };
+			ClockAnalogView.this.onTimeChanged();
+		}
+	};
 
-    
 	@Override
 	public void addBinding(JSONObject bindingProperties) {
 		// No binding possible
 	}
-    public static void createBinding(String stageItemId, JSONObject bindingProperties) {
-        // Do nothing
-    }
+
+	public static void createBinding(String stageItemId, JSONObject bindingProperties) {
+		// Do nothing
+	}
+
 	@Override
 	public void refreshView() {
-		// Not needed	
+		// Not needed
 	}
+
 	@Override
 	public void destroyView() {
-		canvas.getActivity().getBaseContext().unregisterReceiver(mIntentReceiver);
+		this.canvas.getActivity().getBaseContext().unregisterReceiver(this.mIntentReceiver);
 	}
 
 }

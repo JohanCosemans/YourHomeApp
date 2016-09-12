@@ -39,219 +39,242 @@ import de.tavendo.autobahn.WampConnection.SubMeta;
  */
 public class WampReader extends WebSocketReader {
 
-   private static final boolean DEBUG = true;
-   private static final String TAG = WampReader.class.getName();
+	private static final boolean DEBUG = true;
+	private static final String TAG = WampReader.class.getName();
+
+	/// Jackson JSON-to-object mapper.
+	private final ObjectMapper mJsonMapper;
+
+	/// Jackson JSON factory from which we create JSON parsers.
+	private final JsonFactory mJsonFactory;
+
+	/// Holds reference to call map created on master.
+	private final ConcurrentHashMap<String, CallMeta> mCalls;
 
-   /// Jackson JSON-to-object mapper.
-   private final ObjectMapper mJsonMapper;
+	/// Holds reference to event subscription map created on master.
+	private final ConcurrentHashMap<String, SubMeta> mSubs;
+
+	/**
+	 * A reader object is created in AutobahnConnection.
+	 *
+	 * @param calls
+	 *            The call map created on master.
+	 * @param subs
+	 *            The event subscription map created on master.
+	 * @param master
+	 *            Message handler of master (used by us to notify the master).
+	 * @param socket
+	 *            The TCP socket.
+	 * @param options
+	 *            WebSockets connection options.
+	 * @param threadName
+	 *            The thread name we announce.
+	 */
+	public WampReader(ConcurrentHashMap<String, CallMeta> calls, ConcurrentHashMap<String, SubMeta> subs, Handler master, SocketChannel socket, WebSocketOptions options, String threadName) {
 
-   /// Jackson JSON factory from which we create JSON parsers.
-   private final JsonFactory mJsonFactory;
+		super(master, socket, options, threadName);
 
-   /// Holds reference to call map created on master.
-   private final ConcurrentHashMap<String, CallMeta> mCalls;
+		this.mCalls = calls;
+		this.mSubs = subs;
 
-   /// Holds reference to event subscription map created on master.
-   private final ConcurrentHashMap<String, SubMeta> mSubs;
+		this.mJsonMapper = new ObjectMapper();
+		this.mJsonMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		this.mJsonFactory = this.mJsonMapper.getJsonFactory();
 
-   /**
-    * A reader object is created in AutobahnConnection.
-    *
-    * @param calls         The call map created on master.
-    * @param subs          The event subscription map created on master.
-    * @param master        Message handler of master (used by us to notify the master).
-    * @param socket        The TCP socket.
-    * @param options       WebSockets connection options.
-    * @param threadName    The thread name we announce.
-    */
-   public WampReader(ConcurrentHashMap<String, CallMeta> calls,
-                         ConcurrentHashMap<String, SubMeta> subs,
-                         Handler master,
-                         SocketChannel socket,
-                         WebSocketOptions options,
-                         String threadName) {
+		if (WampReader.DEBUG) {
+			Log.d(WampReader.TAG, "created");
+		}
+	}
 
-      super(master, socket, options, threadName);
+	@Override
+	protected void onTextMessage(String payload) {
 
-      mCalls = calls;
-      mSubs = subs;
+		/// \todo make error propagation consistent
+		this.notify(new WebSocketMessage.Error(new WebSocketException("non-raw receive of text message")));
+	}
 
-      mJsonMapper = new ObjectMapper();
-      mJsonMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-      mJsonFactory = mJsonMapper.getJsonFactory();
+	@Override
+	protected void onBinaryMessage(byte[] payload) {
 
-      if (DEBUG) Log.d(TAG, "created");
-   }
+		/// \todo make error propagation consistent
+		this.notify(new WebSocketMessage.Error(new WebSocketException("received binary message")));
+	}
 
-   protected void onTextMessage(String payload) {
+	/**
+	 * Unwraps a WAMP message which is a WebSockets text message with JSON
+	 * payload conforming to WAMP.
+	 */
+	@Override
+	protected void onRawTextMessage(byte[] payload) {
 
-      /// \todo make error propagation consistent
-      notify(new WebSocketMessage.Error(new WebSocketException("non-raw receive of text message")));
-   }
+		try {
 
-   protected void onBinaryMessage(byte[] payload) {
+			// create parser on top of raw UTF-8 payload
+			JsonParser parser = this.mJsonFactory.createJsonParser(payload);
 
-      /// \todo make error propagation consistent
-      notify(new WebSocketMessage.Error(new WebSocketException("received binary message")));
-   }
+			// all Autobahn messages are JSON arrays
+			if (parser.nextToken() == JsonToken.START_ARRAY) {
 
-   /**
-    * Unwraps a WAMP message which is a WebSockets text message with JSON
-    * payload conforming to WAMP.
-    */
-   protected void onRawTextMessage(byte[] payload) {
+				// message type
+				if (parser.nextToken() == JsonToken.VALUE_NUMBER_INT) {
 
-      try {
+					int msgType = parser.getIntValue();
 
-         // create parser on top of raw UTF-8 payload
-         JsonParser parser = mJsonFactory.createJsonParser(payload);
+					if (msgType == WampMessage.MESSAGE_TYPE_CALL_RESULT) {
 
-         // all Autobahn messages are JSON arrays
-         if (parser.nextToken() == JsonToken.START_ARRAY) {
+						// call ID
+						parser.nextToken();
+						String callId = parser.getText();
 
-            // message type
-            if (parser.nextToken() == JsonToken.VALUE_NUMBER_INT) {
+						// result
+						parser.nextToken();
+						Object result = null;
 
-               int msgType = parser.getIntValue();
+						if (this.mCalls.containsKey(callId)) {
 
-               if (msgType == WampMessage.MESSAGE_TYPE_CALL_RESULT) {
+							CallMeta meta = this.mCalls.get(callId);
+							if (meta.mResultClass != null) {
+								result = parser.readValueAs(meta.mResultClass);
+							} else if (meta.mResultTypeRef != null) {
+								result = parser.readValueAs(meta.mResultTypeRef);
+							} else {
+							}
+							this.notify(new WampMessage.CallResult(callId, result));
 
-                  // call ID
-                  parser.nextToken();
-                  String callId = parser.getText();
+						} else {
 
-                  // result
-                  parser.nextToken();
-                  Object result = null;
+							if (WampReader.DEBUG) {
+								Log.d(WampReader.TAG, "WAMP RPC success return for unknown call ID received");
+							}
+						}
 
-                  if (mCalls.containsKey(callId)) {
+					} else if (msgType == WampMessage.MESSAGE_TYPE_CALL_ERROR) {
 
-                     CallMeta meta = mCalls.get(callId);
-                     if (meta.mResultClass != null) {
-                        result = parser.readValueAs(meta.mResultClass);
-                     } else if (meta.mResultTypeRef != null) {
-                        result = parser.readValueAs(meta.mResultTypeRef);
-                     } else {
-                     }
-                     notify(new WampMessage.CallResult(callId, result));
+						// call ID
+						parser.nextToken();
+						String callId = parser.getText();
 
-                  } else {
+						// error URI
+						parser.nextToken();
+						String errorUri = parser.getText();
 
-                     if (DEBUG) Log.d(TAG, "WAMP RPC success return for unknown call ID received");
-                  }
+						// error description
+						parser.nextToken();
+						String errorDesc = parser.getText();
 
-               } else if (msgType == WampMessage.MESSAGE_TYPE_CALL_ERROR) {
+						if (this.mCalls.containsKey(callId)) {
 
-                  // call ID
-                  parser.nextToken();
-                  String callId = parser.getText();
+							this.notify(new WampMessage.CallError(callId, errorUri, errorDesc));
 
-                  // error URI
-                  parser.nextToken();
-                  String errorUri = parser.getText();
+						} else {
 
-                  // error description
-                  parser.nextToken();
-                  String errorDesc = parser.getText();
+							if (WampReader.DEBUG) {
+								Log.d(WampReader.TAG, "WAMP RPC error return for unknown call ID received");
+							}
+						}
 
-                  if (mCalls.containsKey(callId)) {
+					} else if (msgType == WampMessage.MESSAGE_TYPE_EVENT) {
 
-                     notify(new WampMessage.CallError(callId, errorUri, errorDesc));
+						// topic URI
+						parser.nextToken();
+						String topicUri = parser.getText();
 
-                  } else {
+						// event
+						parser.nextToken();
+						Object event = null;
 
-                     if (DEBUG) Log.d(TAG, "WAMP RPC error return for unknown call ID received");
-                  }
+						if (this.mSubs.containsKey(topicUri)) {
 
-               } else if (msgType == WampMessage.MESSAGE_TYPE_EVENT) {
+							SubMeta meta = this.mSubs.get(topicUri);
+							if (meta.mEventClass != null) {
+								event = parser.readValueAs(meta.mEventClass);
+							} else if (meta.mEventTypeRef != null) {
+								event = parser.readValueAs(meta.mEventTypeRef);
+							} else {
+							}
+							this.notify(new WampMessage.Event(topicUri, event));
 
-                  // topic URI
-                  parser.nextToken();
-                  String topicUri = parser.getText();
+						} else {
 
-                  // event
-                  parser.nextToken();
-                  Object event = null;
+							if (WampReader.DEBUG) {
+								Log.d(WampReader.TAG, "WAMP event for not-subscribed topic received");
+							}
+						}
 
-                  if (mSubs.containsKey(topicUri)) {
+					} else if (msgType == WampMessage.MESSAGE_TYPE_PREFIX) {
 
-                     SubMeta meta = mSubs.get(topicUri);
-                     if (meta.mEventClass != null) {
-                        event = parser.readValueAs(meta.mEventClass);
-                     } else if (meta.mEventTypeRef != null) {
-                        event = parser.readValueAs(meta.mEventTypeRef);
-                     } else {
-                     }
-                     notify(new WampMessage.Event(topicUri, event));
+						// prefix
+						parser.nextToken();
+						String prefix = parser.getText();
 
-                  } else {
+						// URI
+						parser.nextToken();
+						String uri = parser.getText();
 
-                     if (DEBUG) Log.d(TAG, "WAMP event for not-subscribed topic received");
-                  }
+						this.notify(new WampMessage.Prefix(prefix, uri));
 
-               } else if (msgType == WampMessage.MESSAGE_TYPE_PREFIX) {
+					} else if (msgType == WampMessage.MESSAGE_TYPE_WELCOME) {
 
-                  // prefix
-                  parser.nextToken();
-                  String prefix = parser.getText();
+						// session ID
+						parser.nextToken();
+						String sessionId = parser.getText();
 
-                  // URI
-                  parser.nextToken();
-                  String uri = parser.getText();
+						// protocol version
+						parser.nextToken();
+						int protocolVersion = parser.getIntValue();
 
-                  notify(new WampMessage.Prefix(prefix, uri));
+						// server ident
+						parser.nextToken();
+						String serverIdent = parser.getText();
 
-               } else if (msgType == WampMessage.MESSAGE_TYPE_WELCOME) {
+						this.notify(new WampMessage.Welcome(sessionId, protocolVersion, serverIdent));
 
-                  // session ID
-                  parser.nextToken();
-                  String sessionId = parser.getText();
+					} else {
 
-                  // protocol version
-                  parser.nextToken();
-                  int protocolVersion = parser.getIntValue();
+						// FIXME: invalid WAMP message
+						if (WampReader.DEBUG) {
+							Log.d(WampReader.TAG, "invalid WAMP message: unrecognized message type");
+						}
 
-                  // server ident
-                  parser.nextToken();
-                  String serverIdent = parser.getText();
+					}
+				} else {
 
-                  notify(new WampMessage.Welcome(sessionId, protocolVersion, serverIdent));
+					if (WampReader.DEBUG) {
+						Log.d(WampReader.TAG, "invalid WAMP message: missing message type or message type not an integer");
+					}
+				}
 
-               } else {
+				if (parser.nextToken() == JsonToken.END_ARRAY) {
 
-                  // FIXME: invalid WAMP message
-                  if (DEBUG) Log.d(TAG, "invalid WAMP message: unrecognized message type");
+					// nothing to do here
 
-               }
-            } else {
+				} else {
 
-               if (DEBUG) Log.d(TAG, "invalid WAMP message: missing message type or message type not an integer");
-            }
+					if (WampReader.DEBUG) {
+						Log.d(WampReader.TAG, "invalid WAMP message: missing array close or invalid additional args");
+					}
+				}
 
-            if (parser.nextToken() == JsonToken.END_ARRAY) {
+			} else {
 
-               // nothing to do here
+				if (WampReader.DEBUG) {
+					Log.d(WampReader.TAG, "invalid WAMP message: not an array");
+				}
+			}
+			parser.close();
 
-            } else {
+		} catch (JsonParseException e) {
 
-               if (DEBUG) Log.d(TAG, "invalid WAMP message: missing array close or invalid additional args");
-            }
+			if (WampReader.DEBUG) {
+				e.printStackTrace();
+			}
 
-         } else {
+		} catch (IOException e) {
 
-            if (DEBUG) Log.d(TAG, "invalid WAMP message: not an array");
-         }
-         parser.close();
+			if (WampReader.DEBUG) {
+				e.printStackTrace();
+			}
 
-
-      } catch (JsonParseException e) {
-
-         if (DEBUG) e.printStackTrace();
-
-      } catch (IOException e) {
-
-         if (DEBUG) e.printStackTrace();
-
-      }
-   }
+		}
+	}
 }

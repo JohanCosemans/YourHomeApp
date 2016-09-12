@@ -1,3 +1,29 @@
+/*-
+ * Copyright (c) 2016 Coteq, Johan Cosemans
+ * All rights reserved.
+ *
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 package net.yourhome.app.canvas;
 
 import java.io.File;
@@ -8,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,21 +41,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
-import net.yourhome.app.bindings.BindingController;
-import net.yourhome.app.bindings.ValueBinding;
-import net.yourhome.app.net.HomeServerConnector;
-import net.yourhome.app.net.discovery.DiscoveryActivity;
-import net.yourhome.app.net.discovery.DiscoveryActivityImp;
-import net.yourhome.app.net.discovery.HomeServerHost;
-import net.yourhome.app.net.discovery.IPHostnameChecker;
-import net.yourhome.app.util.ColorPickerActivity;
-import net.yourhome.app.util.Configuration;
-import net.yourhome.app.util.Util;
-import net.yourhome.app.views.ColorPickerView;
-import net.yourhome.app.views.DynamicView;
-import net.yourhome.app.views.UIEvent;
-import net.yourhome.common.net.messagestructures.general.GCMRegistrationMessage;
-import net.yourhome.app.R;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -72,36 +82,52 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import net.yourhome.app.R;
+import net.yourhome.app.bindings.BindingController;
+import net.yourhome.app.bindings.ValueBinding;
+import net.yourhome.app.net.HomeServerConnector;
+import net.yourhome.app.net.discovery.DiscoveryActivity;
+import net.yourhome.app.net.discovery.DiscoveryActivityImp;
+import net.yourhome.app.net.discovery.HomeServerHost;
+import net.yourhome.app.net.discovery.IPHostnameChecker;
+import net.yourhome.app.util.ColorPickerActivity;
+import net.yourhome.app.util.Configuration;
+import net.yourhome.app.util.Util;
+import net.yourhome.app.views.ColorPickerView;
+import net.yourhome.app.views.UIEvent;
+import net.yourhome.common.net.messagestructures.general.GCMRegistrationMessage;
 
 public class CanvasActivity extends FragmentActivity {
 	public enum LoadingStatus {
-		ERROR("error"),
-		CONNECTING("connecting"),
-		CONNECTED("connected"),
-		UNKNOWN("unknown");
-		
+		ERROR("error"), CONNECTING("connecting"), CONNECTED("connected"), UNKNOWN("unknown");
+
 		LoadingStatus(String status) {
 			this.status = status;
 		}
+
 		private String status;
-		public String convert() {return status;}
+
+		public String convert() {
+			return this.status;
+		}
 	}
-    private final String HIDE_STATUSBAR = "net.yourhome.app.canvas.HIDE_STATUSBAR";
-    private Handler mHandler = new Handler();
-	
+
+	private final String HIDE_STATUSBAR = "net.yourhome.app.canvas.HIDE_STATUSBAR";
+	private Handler mHandler = new Handler();
+
 	private CanvasFragmentAdapter canvasFragmentAdapter;
 	private CanvasActivity me = this;
 	private ViewPager mViewPager;
 	private String TAG = "CanvasActivity";
 	private HomeServerConnector homeServerConnector;
-	//private boolean wifiConnected;
+	// private boolean wifiConnected;
 
-	private Map<String,List<ValueBinding>> activityResultListeners = new HashMap<String,List<ValueBinding>>();
+	private Map<String, List<ValueBinding>> activityResultListeners = new HashMap<String, List<ValueBinding>>();
 
 	// Google cloud messaging
 	private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 	private GoogleCloudMessaging gcm;
-	//private AtomicInteger msgId = new AtomicInteger();
+	// private AtomicInteger msgId = new AtomicInteger();
 	private String regid;
 	public static final String EXTRA_MESSAGE = "message";
 	public static final String PROPERTY_REG_ID = "registration_id";
@@ -122,24 +148,24 @@ public class CanvasActivity extends FragmentActivity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			String action = intent.getAction();
-			Log.d(TAG, action);
-			setLoadingStatus(action);
-			if(action.equals(LoadingStatus.CONNECTED.convert())) {
+			Log.d(CanvasActivity.this.TAG, action);
+			CanvasActivity.this.setLoadingStatus(action);
+			if (action.equals(LoadingStatus.CONNECTED.convert())) {
 				// Send Google Cloud Messaging registration ID
-				GCMRegistrationMessage registrationMessage = new GCMRegistrationMessage(regid, Configuration.getInstance().getDeviceName());
+				GCMRegistrationMessage registrationMessage = new GCMRegistrationMessage(CanvasActivity.this.regid, Configuration.getInstance().getDeviceName());
 				Point currentCanvasSize = new Point();
 				WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
 				Display display = wm.getDefaultDisplay();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                    display.getRealSize(currentCanvasSize);
-                }else {
-                    display.getSize(currentCanvasSize);
-                }
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+					display.getRealSize(currentCanvasSize);
+				} else {
+					display.getSize(currentCanvasSize);
+				}
 				registrationMessage.screenWidth = currentCanvasSize.x;
 				registrationMessage.screenHeight = currentCanvasSize.y;
-				
+
 				try {
-					homeServerConnector.sendCommand(registrationMessage);
+					CanvasActivity.this.homeServerConnector.sendCommand(registrationMessage);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -148,35 +174,36 @@ public class CanvasActivity extends FragmentActivity {
 	};
 
 	private LoadingStatus lastStatus = LoadingStatus.UNKNOWN;
-	private void setLoadingStatus( String status ) {
-		ImageView statusIcon = (ImageView) me.findViewById(R.id.connectionStatusIcon);
-		if(!status.equals(lastStatus.convert())) {
-			if (status.equals(LoadingStatus.ERROR.convert())
-					|| status.equals(LoadingStatus.CONNECTING.convert())) {
-				Log.d(TAG, "[UI] Received disconnect");
-	
+
+	private void setLoadingStatus(String status) {
+		ImageView statusIcon = (ImageView) this.me.findViewById(R.id.connectionStatusIcon);
+		if (!status.equals(this.lastStatus.convert())) {
+			if (status.equals(LoadingStatus.ERROR.convert()) || status.equals(LoadingStatus.CONNECTING.convert())) {
+				Log.d(this.TAG, "[UI] Received disconnect");
+
 				Bitmap loadingIcon = Configuration.getInstance().getAppIcon(getBaseContext(), R.string.icon_spinner, 40, Color.WHITE);
 				Bitmap loadingIconShadow = Util.addShadow(loadingIcon, loadingIcon.getHeight(), loadingIcon.getWidth(), Color.BLACK, 1, 1, 1);
-				
+
 				RotateAnimation rotate = new RotateAnimation(0, 359, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
 				rotate.setDuration(2000);
 				rotate.setRepeatCount(Animation.INFINITE);
 				rotate.setInterpolator(new LinearInterpolator());
-	
+
 				statusIcon.setImageBitmap(loadingIconShadow);
 				statusIcon.setVisibility(View.VISIBLE);
 				statusIcon.startAnimation(rotate);
-			}else if (status.equals(LoadingStatus.CONNECTED.convert())) {
-				Log.d(TAG, "[UI] Received connected");
+			} else if (status.equals(LoadingStatus.CONNECTED.convert())) {
+				Log.d(this.TAG, "[UI] Received connected");
 				statusIcon.clearAnimation();
 				statusIcon.setImageResource(0);
 				statusIcon.setVisibility(View.GONE);
 			}
 		}
 	}
+
 	@Override
 	protected void onRestoreInstanceState(Bundle inState) {
-		Log.d(TAG, "onRestoreInstanceState - " + inState);
+		Log.d(this.TAG, "onRestoreInstanceState - " + inState);
 		super.onRestoreInstanceState(inState);
 	}
 
@@ -211,97 +238,92 @@ public class CanvasActivity extends FragmentActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		requestWindowFeature(Window.FEATURE_NO_TITLE); // Set fullscreen
-		//getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, // Set
-																			// fullscreen
-		//		WindowManager.LayoutParams.FLAG_FULLSCREEN); // Set fullscreen
-		//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); // Set
-																			// screen
-																			// on
-																			// landscape
+		// getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, //
+		// Set
+		// fullscreen
+		// WindowManager.LayoutParams.FLAG_FULLSCREEN); // Set fullscreen
+		// setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+		// // Set
+		// screen
+		// on
+		// landscape
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); // Keep
 																				// screen
 																				// awake
 		View decorView = getWindow().getDecorView();
 		int uiOptions = 0;
-		//| View.SYSTEM_UI_FLAG_FULLSCREEN
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+		// | View.SYSTEM_UI_FLAG_FULLSCREEN
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 			uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
 			uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
 			uiOptions |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-			uiOptions |= View.SYSTEM_UI_FLAG_FULLSCREEN ;
-			uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE ;
-            uiOptions |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-		}else {
-            uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-            uiOptions |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-            uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-            uiOptions |= View.SYSTEM_UI_FLAG_FULLSCREEN;
+			uiOptions |= View.SYSTEM_UI_FLAG_FULLSCREEN;
+			uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+			uiOptions |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+		} else {
+			uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+			uiOptions |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+			uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+			uiOptions |= View.SYSTEM_UI_FLAG_FULLSCREEN;
 		}
-		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		decorView.setSystemUiVisibility(uiOptions);
-        /* decorView.setOnSystemUiVisibilityChangeListener
-                (new View.OnSystemUiVisibilityChangeListener() {
-                    @Override
-                    public void onSystemUiVisibilityChange(int visibility) {
-                        // Note that system bars will only be "visible" if none of the
-                        // LOW_PROFILE, HIDE_NAVIGATION, or FULLSCREEN flags are set.
-                        if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-                            // TODO: The system bars are visible. Make any desired
-                            if(Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-                                // Immersive mode does not exist - hide the action bars after a few seconds
-                                if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-                                    mHandler.postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                                                          | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                                                          | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                                          | View.SYSTEM_UI_FLAG_FULLSCREEN ;
-                                            getWindow().getDecorView().setSystemUiVisibility(uiOptions);
-                                        }}, 3000);
-                                }
-                            }
-                        }
-                    }
-                });
-        */
-		Log.d(TAG, "OnCreate canvasActivity - " + savedInstanceState);
+		/*
+		 * decorView.setOnSystemUiVisibilityChangeListener (new
+		 * View.OnSystemUiVisibilityChangeListener() {
+		 * 
+		 * @Override public void onSystemUiVisibilityChange(int visibility) { //
+		 * Note that system bars will only be "visible" if none of the //
+		 * LOW_PROFILE, HIDE_NAVIGATION, or FULLSCREEN flags are set. if
+		 * ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) { // TODO: The
+		 * system bars are visible. Make any desired if(Build.VERSION.SDK_INT <
+		 * Build.VERSION_CODES.KITKAT) { // Immersive mode does not exist - hide
+		 * the action bars after a few seconds if ((visibility &
+		 * View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) { mHandler.postDelayed(new
+		 * Runnable() {
+		 * 
+		 * @Override public void run() { int uiOptions =
+		 * View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+		 * View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+		 * View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN
+		 * ; getWindow().getDecorView().setSystemUiVisibility(uiOptions); }},
+		 * 3000); } } } } });
+		 */
+		Log.d(this.TAG, "OnCreate canvasActivity - " + savedInstanceState);
 
-		SharedPreferences settings = me.getSharedPreferences("USER", MODE_PRIVATE);
+		SharedPreferences settings = this.me.getSharedPreferences("USER", MODE_PRIVATE);
 		setContentView(R.layout.controller_canvas_sections);
-		addLegacyOverflowButton(getWindow());
+		CanvasActivity.addLegacyOverflowButton(getWindow());
 		super.onCreate(savedInstanceState);
 
 		// Check device for Play Services APK. If check succeeds, proceed with
 		// GCM registration.
-		if (checkPlayServices()) {
-			gcm = GoogleCloudMessaging.getInstance(this);
-			regid = getRegistrationId(me);
+		if (this.checkPlayServices()) {
+			this.gcm = GoogleCloudMessaging.getInstance(this);
+			this.regid = this.getRegistrationId(this.me);
 
-			if (regid.isEmpty()) {
-				registerInBackground();
+			if (this.regid.isEmpty()) {
+				this.registerInBackground();
 			}
 		} else {
-			Log.i(TAG, "No valid Google Play Services APK found.");
+			Log.i(this.TAG, "No valid Google Play Services APK found.");
 		}
 
-		//setLoadingStatus(LoadingStatus.CONNECTING.convert());
+		// setLoadingStatus(LoadingStatus.CONNECTING.convert());
 
 		// Navigation drawer - set a custom shadow that overlays the main
 		// content when the drawer opens
 		// set up the drawer's list view with items and click listener
-		mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-		mDrawerList = (ListView) findViewById(R.id.left_drawer);
-		mDrawerLayout.setDrawerShadow(R.mipmap.drawer_shadow, GravityCompat.START);
+		this.mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		this.mDrawerList = (ListView) findViewById(R.id.left_drawer);
+		this.mDrawerLayout.setDrawerShadow(R.mipmap.drawer_shadow, GravityCompat.START);
 
-		navDrawerItems = new ArrayList<NavDrawerItem>();
-		navDrawerItems.add(new NavDrawerItem(getString(R.string.drawer_settings), R.string.icon_cogs, false));
-		navDrawerAdapter = new NavDrawerListAdapter(getApplicationContext(), navDrawerItems);
-		mDrawerList.setAdapter(navDrawerAdapter);
-		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-		
-		
+		this.navDrawerItems = new ArrayList<NavDrawerItem>();
+		this.navDrawerItems.add(new NavDrawerItem(getString(R.string.drawer_settings), R.string.icon_cogs, false));
+		this.navDrawerAdapter = new NavDrawerListAdapter(getApplicationContext(), this.navDrawerItems);
+		this.mDrawerList.setAdapter(this.navDrawerAdapter);
+		this.mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+
 		/*** LAN connection data ***/
 		String homeserverIP = settings.getString("HOMESERVER_IP", null);
 		int homeserverPort = (int) settings.getInt("HOMESERVER_PORT", 0);
@@ -347,25 +369,25 @@ public class CanvasActivity extends FragmentActivity {
 	protected void onResume() {
 		super.onResume();
 		// Check device for Play Services APK.
-		checkPlayServices();
+		this.checkPlayServices();
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		// Unregister since the activity is about to be closed.
-		LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+		LocalBroadcastManager.getInstance(this).unregisterReceiver(this.mMessageReceiver);
 		// Disconnect from socket
 		if (this.homeServerConnector != null) {
 			this.homeServerConnector.disconnect();
 		}
-        BindingController.getInstance().destroy();
+		BindingController.getInstance().destroy();
 		// Unload configuration
 		Configuration.getInstance().destroy();
-		Log.d(TAG, "Activity destroyed");
+		Log.d(this.TAG, "Activity destroyed");
 
 		if (this.canvasFragmentAdapter != null) {
-			//this.canvasFragmentAdapter.removeAllfragments();
+			// this.canvasFragmentAdapter.removeAllfragments();
 			this.canvasFragmentAdapter = null;
 		}
 
@@ -373,13 +395,13 @@ public class CanvasActivity extends FragmentActivity {
 			this.homeServerConnector.destroy();
 			this.homeServerConnector = null;
 		}
-		activityResultListeners.clear();
-		activityResultListeners = null;
-        mDrawerList = null;
-        me = null;
-    }
+		this.activityResultListeners.clear();
+		this.activityResultListeners = null;
+		this.mDrawerList = null;
+		this.me = null;
+	}
 
-    @Override
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add(0, DiscoveryActivity.MENU_OPEN_DISCOVERY, 0, R.string.server_discovery).setIcon(android.R.drawable.ic_menu_add);
 
@@ -388,7 +410,7 @@ public class CanvasActivity extends FragmentActivity {
 
 	@Override
 	public void onAttachFragment(Fragment fragment) {
-		Log.d(TAG, "onAttachFragment - " + fragment.getTag());
+		Log.d(this.TAG, "onAttachFragment - " + fragment.getTag());
 		super.onAttachFragment(fragment);
 	}
 
@@ -397,7 +419,7 @@ public class CanvasActivity extends FragmentActivity {
 		switch (item.getItemId()) {
 		case DiscoveryActivity.MENU_OPEN_DISCOVERY:
 			startActivity(new Intent(this, DiscoveryActivityImp.class));
-			me.finish();
+			this.me.finish();
 			return true;
 		}
 		return false;
@@ -412,9 +434,9 @@ public class CanvasActivity extends FragmentActivity {
 		int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
 		if (resultCode != ConnectionResult.SUCCESS) {
 			if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-				GooglePlayServicesUtil.getErrorDialog(resultCode, this, PLAY_SERVICES_RESOLUTION_REQUEST).show();
+				GooglePlayServicesUtil.getErrorDialog(resultCode, this, CanvasActivity.PLAY_SERVICES_RESOLUTION_REQUEST).show();
 			} else {
-				Log.i(TAG, "This device is not supported.");
+				Log.i(this.TAG, "This device is not supported.");
 				finish();
 			}
 			return false;
@@ -432,12 +454,12 @@ public class CanvasActivity extends FragmentActivity {
 	 *            registration ID
 	 */
 	private void storeRegistrationId(Context context, String regId) {
-		final SharedPreferences prefs = getGcmPreferences(me);
-		int appVersion = getAppVersion(me);
-		Log.i(TAG, "Saving regId on app version " + appVersion);
+		final SharedPreferences prefs = this.getGcmPreferences(this.me);
+		int appVersion = CanvasActivity.getAppVersion(this.me);
+		Log.i(this.TAG, "Saving regId on app version " + appVersion);
 		SharedPreferences.Editor editor = prefs.edit();
-		editor.putString(PROPERTY_REG_ID, regId);
-		editor.putInt(PROPERTY_APP_VERSION, appVersion);
+		editor.putString(CanvasActivity.PROPERTY_REG_ID, regId);
+		editor.putInt(CanvasActivity.PROPERTY_APP_VERSION, appVersion);
 		editor.apply();
 	}
 
@@ -451,10 +473,10 @@ public class CanvasActivity extends FragmentActivity {
 	 *         registration ID.
 	 */
 	private String getRegistrationId(Context context) {
-		final SharedPreferences prefs = getGcmPreferences(context);
-		String registrationId = prefs.getString(PROPERTY_REG_ID, "");
+		final SharedPreferences prefs = this.getGcmPreferences(context);
+		String registrationId = prefs.getString(CanvasActivity.PROPERTY_REG_ID, "");
 		if (registrationId.isEmpty()) {
-			Log.i(TAG, "Registration not found.");
+			Log.i(this.TAG, "Registration not found.");
 			return "";
 		}
 		return registrationId;
@@ -472,16 +494,16 @@ public class CanvasActivity extends FragmentActivity {
 			protected String doInBackground(Void... params) {
 				String msg = "";
 				try {
-					if (gcm == null) {
-						gcm = GoogleCloudMessaging.getInstance(me);
+					if (CanvasActivity.this.gcm == null) {
+						CanvasActivity.this.gcm = GoogleCloudMessaging.getInstance(CanvasActivity.this.me);
 					}
-					regid = gcm.register(SENDER_ID);
-					msg = "Device registered, registration ID=" + regid;
-					storeRegistrationId(me, regid);
+					CanvasActivity.this.regid = CanvasActivity.this.gcm.register(CanvasActivity.SENDER_ID);
+					msg = "Device registered, registration ID=" + CanvasActivity.this.regid;
+					CanvasActivity.this.storeRegistrationId(CanvasActivity.this.me, CanvasActivity.this.regid);
 				} catch (IOException ex) {
 					msg = "Error :" + ex.getMessage();
 				}
-				Log.i(TAG, msg);
+				Log.i(CanvasActivity.this.TAG, msg);
 				return msg;
 			}
 
@@ -496,15 +518,15 @@ public class CanvasActivity extends FragmentActivity {
 	 */
 	private static int getAppVersion(Context context) {
 		try {
-            if(context != null && context.getPackageManager() != null) {
-                PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-                return packageInfo.versionCode;
-            }
+			if (context != null && context.getPackageManager() != null) {
+				PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+				return packageInfo.versionCode;
+			}
 		} catch (NameNotFoundException e) {
 			// should never happen
 			throw new RuntimeException("Could not get package name: " + e);
 		}
-        return 0;
+		return 0;
 	}
 
 	/**
@@ -513,18 +535,24 @@ public class CanvasActivity extends FragmentActivity {
 	private SharedPreferences getGcmPreferences(Context context) {
 		return getSharedPreferences(CanvasActivity.class.getSimpleName(), Context.MODE_PRIVATE);
 	}
+
 	// // End google cloud messaging
-    public void removeActivityResultListener(ValueBinding binding) {
-        List<ValueBinding> bindings = activityResultListeners.get(binding.getStageElementId());
-        if(bindings != null) {
-            bindings.remove(binding);
-        }
-    }
-	public void addActivityResultListener(ValueBinding binding) {
-        List<ValueBinding> bindings = activityResultListeners.get(binding.getControlIdentifier().getKey());
-        if(bindings == null) { bindings = new ArrayList<>(); activityResultListeners.put(binding.getStageElementId(),bindings); }
-        bindings.add(binding);
+	public void removeActivityResultListener(ValueBinding binding) {
+		List<ValueBinding> bindings = this.activityResultListeners.get(binding.getStageElementId());
+		if (bindings != null) {
+			bindings.remove(binding);
+		}
 	}
+
+	public void addActivityResultListener(ValueBinding binding) {
+		List<ValueBinding> bindings = this.activityResultListeners.get(binding.getControlIdentifier().getKey());
+		if (bindings == null) {
+			bindings = new ArrayList<>();
+			this.activityResultListeners.put(binding.getStageElementId(), bindings);
+		}
+		bindings.add(binding);
+	}
+
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		if (requestCode == ColorPickerView.ACTION_GETCOLOR) {
 
@@ -532,52 +560,55 @@ public class CanvasActivity extends FragmentActivity {
 				// Send to colorpicker
 				Bundle b = intent.getExtras();
 				if (b != null) {
-                    String storeColorKey = b.getString(ColorPickerActivity.STORE_COLOR_KEY);
+					String storeColorKey = b.getString(ColorPickerActivity.STORE_COLOR_KEY);
 					int newColor = b.getInt(storeColorKey);
-                    String stageElementId = b.getString("stageElementId");
-                    List<ValueBinding> listeningBindings = this.activityResultListeners.get(stageElementId);
-                    if(listeningBindings != null) {
-                        for (ValueBinding valueBinding : listeningBindings) {
-                            //valueBinding.setValue(newColor+"");
-                            UIEvent event = new UIEvent(UIEvent.Types.SET_VALUE);
-                            event.setProperty("VALUE",newColor);
-                            valueBinding.viewPressed(null, event);
-                        }
-                    }
+					String stageElementId = b.getString("stageElementId");
+					List<ValueBinding> listeningBindings = this.activityResultListeners.get(stageElementId);
+					if (listeningBindings != null) {
+						for (ValueBinding valueBinding : listeningBindings) {
+							// valueBinding.setValue(newColor+"");
+							UIEvent event = new UIEvent(UIEvent.Types.SET_VALUE);
+							event.setProperty("VALUE", newColor);
+							valueBinding.viewPressed(null, event);
+						}
+					}
 				}
 			} else if (resultCode == Activity.RESULT_CANCELED) {
 			}
 		}
 	}
+
 	public void nextFragment() {
-		int currentItem = mViewPager.getCurrentItem()%canvasFragmentAdapter.getRealCount();
-		int nextItem = currentItem+1;
-		if(nextItem>canvasFragmentAdapter.getRealCount()-1) {
+		int currentItem = this.mViewPager.getCurrentItem() % this.canvasFragmentAdapter.getRealCount();
+		int nextItem = currentItem + 1;
+		if (nextItem > this.canvasFragmentAdapter.getRealCount() - 1) {
 			nextItem = 0;
 		}
-        int circularNextItem = nextItem+canvasFragmentAdapter.getRealCount()*CanvasFragmentAdapter.LOOPS_COUNT/2;
-        mViewPager.setCurrentItem(nextItem+canvasFragmentAdapter.getRealCount()*CanvasFragmentAdapter.LOOPS_COUNT/2, false);
+		int circularNextItem = nextItem + this.canvasFragmentAdapter.getRealCount() * CanvasFragmentAdapter.LOOPS_COUNT / 2;
+		this.mViewPager.setCurrentItem(nextItem + this.canvasFragmentAdapter.getRealCount() * CanvasFragmentAdapter.LOOPS_COUNT / 2, false);
 	}
+
 	public void previousFragment() {
-		int currentItem = mViewPager.getCurrentItem()%canvasFragmentAdapter.getRealCount();
-		int nextItem = currentItem-1;
-		if(nextItem<0) {
-			nextItem = canvasFragmentAdapter.getRealCount()-1;
+		int currentItem = this.mViewPager.getCurrentItem() % this.canvasFragmentAdapter.getRealCount();
+		int nextItem = currentItem - 1;
+		if (nextItem < 0) {
+			nextItem = this.canvasFragmentAdapter.getRealCount() - 1;
 		}
-        int circularNextItem = nextItem+canvasFragmentAdapter.getRealCount()*CanvasFragmentAdapter.LOOPS_COUNT/2;
-		mViewPager.setCurrentItem(circularNextItem, false);
+		int circularNextItem = nextItem + this.canvasFragmentAdapter.getRealCount() * CanvasFragmentAdapter.LOOPS_COUNT / 2;
+		this.mViewPager.setCurrentItem(circularNextItem, false);
 	}
+
 	/* The click listner for ListView in the navigation drawer */
 	private class DrawerItemClickListener implements ListView.OnItemClickListener {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-			if(position != parent.getChildCount()-1) {
-				mViewPager.setCurrentItem(position+canvasFragmentAdapter.getRealCount()*CanvasFragmentAdapter.LOOPS_COUNT/2);
-				mDrawerLayout.closeDrawer(mDrawerList);
-			}else {
-				mDrawerLayout.closeDrawer(mDrawerList);
-				startActivity(new Intent(me, DiscoveryActivityImp.class));
-				me.finish();
+			if (position != parent.getChildCount() - 1) {
+				CanvasActivity.this.mViewPager.setCurrentItem(position + CanvasActivity.this.canvasFragmentAdapter.getRealCount() * CanvasFragmentAdapter.LOOPS_COUNT / 2);
+				CanvasActivity.this.mDrawerLayout.closeDrawer(CanvasActivity.this.mDrawerList);
+			} else {
+				CanvasActivity.this.mDrawerLayout.closeDrawer(CanvasActivity.this.mDrawerList);
+				startActivity(new Intent(CanvasActivity.this.me, DiscoveryActivityImp.class));
+				CanvasActivity.this.me.finish();
 			}
 		}
 	}
@@ -596,7 +627,7 @@ public class CanvasActivity extends FragmentActivity {
 
 			// We assume that there is a configuration present if we are
 			// resuming the application and the path is filled
-			configurationPresent = resumeFromSuspend && !(this.localConfigurationPath == null || this.configurationName == null);
+			this.configurationPresent = resumeFromSuspend && !(this.localConfigurationPath == null || this.configurationName == null);
 		}
 
 		final ProgressBar progress = (ProgressBar) findViewById(R.id.canvasActivityLoader);
@@ -605,24 +636,26 @@ public class CanvasActivity extends FragmentActivity {
 		@Override
 		protected void onPreExecute() {
 
-			//SharedPreferences settings = me.getSharedPreferences("USER", MODE_PRIVATE);
+			// SharedPreferences settings = me.getSharedPreferences("USER",
+			// MODE_PRIVATE);
 
 			// Build loading message
-			text.setText("Loading your homeserver");
-			text.setVisibility(View.VISIBLE);
-			progress.setVisibility(View.VISIBLE);
+			this.text.setText("Loading your homeserver");
+			this.text.setVisibility(View.VISIBLE);
+			this.progress.setVisibility(View.VISIBLE);
 
 			// Prepare connection
-			homeServerConnector = HomeServerConnector.getInstance();
-			homeServerConnector.setMainContext(me);
+			CanvasActivity.this.homeServerConnector = HomeServerConnector.getInstance();
+			CanvasActivity.this.homeServerConnector.setMainContext(CanvasActivity.this.me);
 		}
 
 		@Override
-		protected void onProgressUpdate(String[] status){
-			if(status.length > 0) {
-				text.setText(status[0]);
+		protected void onProgressUpdate(String[] status) {
+			if (status.length > 0) {
+				this.text.setText(status[0]);
 			}
-	    }
+		}
+
 		@Override
 		protected HomeServerHost doInBackground(Void... arg0) {
 
@@ -630,85 +663,85 @@ public class CanvasActivity extends FragmentActivity {
 			checkedHost = super.doInBackground(arg0);
 
 			// Check if configuration is still published
-			if(checkedHost == null || checkedHost.getInfo().getConfigurations().get(configurationName) == null) {
+			if (checkedHost == null || checkedHost.getInfo().getConfigurations().get(this.configurationName) == null) {
 				connectionTestResult = false;
 			}
 
 			// Load configuration
-            JSONObject activeConfiguration = null;
-			if (configurationPresent || connectionTestResult) {
-                try {
-                    if (configurationPresent) {
-                        try {
-                            activeConfiguration = Configuration.getInstance().parseConfiguration(new File(this.localConfigurationPath));
-                            Configuration.getInstance().setHomeServerHostName(checkedHost.ipAddress);
-                            Configuration.getInstance().setHomeServerPort(checkedHost.port);
-                        } catch (FileNotFoundException | java.util.zip.ZipException e) {
-                            // The configuration could not be read; Reload it!
-                            configurationPresent = false;
-                        } catch (JSONException e) {
-                            Log.e(TAG, "JSON Configuration invalid+" + e.getMessage());
-                            configurationPresent = false;
-                        }
-                    }
-                    if(!configurationPresent) {
-                        Configuration configuration = Configuration.getInstance();
-                        activeConfiguration = configuration.initialize(getBaseContext(), checkedHost, configurationName);
-                    }
+			JSONObject activeConfiguration = null;
+			if (this.configurationPresent || connectionTestResult) {
+				try {
+					if (this.configurationPresent) {
+						try {
+							activeConfiguration = Configuration.getInstance().parseConfiguration(new File(this.localConfigurationPath));
+							Configuration.getInstance().setHomeServerHostName(checkedHost.ipAddress);
+							Configuration.getInstance().setHomeServerPort(checkedHost.port);
+						} catch (FileNotFoundException | java.util.zip.ZipException e) {
+							// The configuration could not be read; Reload it!
+							this.configurationPresent = false;
+						} catch (JSONException e) {
+							Log.e(CanvasActivity.this.TAG, "JSON Configuration invalid+" + e.getMessage());
+							this.configurationPresent = false;
+						}
+					}
+					if (!this.configurationPresent) {
+						Configuration configuration = Configuration.getInstance();
+						activeConfiguration = configuration.initialize(getBaseContext(), checkedHost, this.configurationName);
+					}
 
-                    // Fill collections with fragments based on configuration
-                    // Generate canvascollection
-                    canvasFragmentAdapter = new CanvasFragmentAdapter(getSupportFragmentManager(), activeConfiguration);
-                    menuItems = canvasFragmentAdapter.initializeBindings();
-                    Log.d(TAG, "canvasFragmentAdapter filled with " + canvasFragmentAdapter.getCount() + " fragments");
+					// Fill collections with fragments based on configuration
+					// Generate canvascollection
+					CanvasActivity.this.canvasFragmentAdapter = new CanvasFragmentAdapter(getSupportFragmentManager(), activeConfiguration);
+					CanvasActivity.this.menuItems = CanvasActivity.this.canvasFragmentAdapter.initializeBindings();
+					Log.d(CanvasActivity.this.TAG, "canvasFragmentAdapter filled with " + CanvasActivity.this.canvasFragmentAdapter.getCount() + " fragments");
 
-                    SharedPreferences settings = me.getSharedPreferences("USER", MODE_PRIVATE);
-                    Editor edit = settings.edit();
-                    if (checkedHost != null && this.ipAddress.equals(checkedHost.ipAddress)) {
-                        Configuration.getInstance().setHomeServerHostName(checkedHost.ipAddress);
-                        Configuration.getInstance().setHomeServerPort(checkedHost.port);
-                        edit.putString("HOMESERVER_CONNECTION_MODE", "LAN");
-                        edit.commit();
-                    } else if (checkedHost != null && this.ipAddressExt.equals(checkedHost.ipAddress)) {
-                        Configuration.getInstance().setHomeServerHostName(checkedHost.ipAddress);
-                        Configuration.getInstance().setHomeServerPort(checkedHost.port);
-                        edit.putString("HOMESERVER_CONNECTION_MODE", "INTERNET");
-                        edit.commit();
-                    }
-                }catch(Exception e) {
-                    e.printStackTrace();
-                    //Util.appendToLogFile(me, ExceptionUtils.getStackTrace(e));
-                    connectionTestResult = false;
-                    configurationPresent = false;
-                    error = true;
-                }
+					SharedPreferences settings = CanvasActivity.this.me.getSharedPreferences("USER", MODE_PRIVATE);
+					Editor edit = settings.edit();
+					if (checkedHost != null && this.ipAddress.equals(checkedHost.ipAddress)) {
+						Configuration.getInstance().setHomeServerHostName(checkedHost.ipAddress);
+						Configuration.getInstance().setHomeServerPort(checkedHost.port);
+						edit.putString("HOMESERVER_CONNECTION_MODE", "LAN");
+						edit.commit();
+					} else if (checkedHost != null && this.ipAddressExt.equals(checkedHost.ipAddress)) {
+						Configuration.getInstance().setHomeServerHostName(checkedHost.ipAddress);
+						Configuration.getInstance().setHomeServerPort(checkedHost.port);
+						edit.putString("HOMESERVER_CONNECTION_MODE", "INTERNET");
+						edit.commit();
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					// Util.appendToLogFile(me,
+					// ExceptionUtils.getStackTrace(e));
+					connectionTestResult = false;
+					this.configurationPresent = false;
+					this.error = true;
+				}
 			}
-			
+
 			return null;
 		}
 
 		@Override
 		protected void onPostExecute(HomeServerHost result) {
-            if(error) {
-                Toast.makeText(me.getBaseContext(),
-                        getResources().getString(R.string.error_loading_configuration), Toast.LENGTH_LONG).show();
+			if (this.error) {
+				Toast.makeText(CanvasActivity.this.me.getBaseContext(), getResources().getString(R.string.error_loading_configuration), Toast.LENGTH_LONG).show();
 
-                Thread thread = new Thread(){
-                    @Override
-                    public void run() {
-                    try {
-                        Thread.sleep(2000);
-                        startActivity(new Intent(me, DiscoveryActivityImp.class));
-                        me.finish();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    }
-                };
-                thread.start();
-            }else if ((connectionTestResult || configurationPresent)) {
+				Thread thread = new Thread() {
+					@Override
+					public void run() {
+						try {
+							Thread.sleep(2000);
+							startActivity(new Intent(CanvasActivity.this.me, DiscoveryActivityImp.class));
+							CanvasActivity.this.me.finish();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				};
+				thread.start();
+			} else if ((connectionTestResult || this.configurationPresent)) {
 				// Set screen orientation
-				switch(Configuration.getInstance().getOrientation()) {
+				switch (Configuration.getInstance().getOrientation()) {
 				case landscape:
 					setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 					break;
@@ -716,52 +749,53 @@ public class CanvasActivity extends FragmentActivity {
 					setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 					break;
 				}
-				
-				// Connect to websocket
-				progress.setVisibility(View.GONE);
-				text.setVisibility(View.GONE);
-				mViewPager = (ViewPager) findViewById(R.id.pager);
-//				mViewPager.setOffscreenPageLimit(15);
-				mViewPager.setOffscreenPageLimit(1);
-				mViewPager.setAdapter(canvasFragmentAdapter);
-                mViewPager.setCurrentItem(canvasFragmentAdapter.getRealCount() * CanvasFragmentAdapter.LOOPS_COUNT / 2);
 
-				if (menuItems != null && menuItems.size() > 0) {
-					for (int i = menuItems.size()-1; i >=0; i--) {
-						String menuItem = menuItems.get(i);
+				// Connect to websocket
+				this.progress.setVisibility(View.GONE);
+				this.text.setVisibility(View.GONE);
+				CanvasActivity.this.mViewPager = (ViewPager) findViewById(R.id.pager);
+				// mViewPager.setOffscreenPageLimit(15);
+				CanvasActivity.this.mViewPager.setOffscreenPageLimit(1);
+				CanvasActivity.this.mViewPager.setAdapter(CanvasActivity.this.canvasFragmentAdapter);
+				CanvasActivity.this.mViewPager.setCurrentItem(CanvasActivity.this.canvasFragmentAdapter.getRealCount() * CanvasFragmentAdapter.LOOPS_COUNT / 2);
+
+				if (CanvasActivity.this.menuItems != null && CanvasActivity.this.menuItems.size() > 0) {
+					for (int i = CanvasActivity.this.menuItems.size() - 1; i >= 0; i--) {
+						String menuItem = CanvasActivity.this.menuItems.get(i);
 						// adding nav drawer items to array
 						switch (i) {
 						case 0:
-							navDrawerItems.add(0,new NavDrawerItem(menuItem, R.string.icon_home, false));
+							CanvasActivity.this.navDrawerItems.add(0, new NavDrawerItem(menuItem, R.string.icon_home, false));
 							break;
 						default:
-							navDrawerItems.add(0,new NavDrawerItem(menuItem, R.string.icon_file_o, false));
+							CanvasActivity.this.navDrawerItems.add(0, new NavDrawerItem(menuItem, R.string.icon_file_o, false));
 							break;
-						}	
+						}
 					}
-					navDrawerAdapter.notifyDataSetChanged();
+					CanvasActivity.this.navDrawerAdapter.notifyDataSetChanged();
 				}
-				
+
 				Thread connectorThread = new Thread() {
+					@Override
 					public void run() {
-                    if(homeServerConnector != null) {
-                        homeServerConnector.connect();
-                    }
+						if (CanvasActivity.this.homeServerConnector != null) {
+							CanvasActivity.this.homeServerConnector.connect();
+						}
 					}
 				};
-				
+
 				// Register UI event listeners
 				IntentFilter filter = new IntentFilter();
 				filter.addAction(LoadingStatus.CONNECTED.convert());
 				filter.addAction(LoadingStatus.ERROR.convert());
 				filter.addAction(LoadingStatus.CONNECTING.convert());
-				LocalBroadcastManager.getInstance(me).registerReceiver(mMessageReceiver, filter);
-				
+				LocalBroadcastManager.getInstance(CanvasActivity.this.me).registerReceiver(CanvasActivity.this.mMessageReceiver, filter);
+
 				connectorThread.start();
 
 			} else {
-				startActivity(new Intent(me, DiscoveryActivityImp.class));
-				me.finish();
+				startActivity(new Intent(CanvasActivity.this.me, DiscoveryActivityImp.class));
+				CanvasActivity.this.me.finish();
 			}
 		}
 	}

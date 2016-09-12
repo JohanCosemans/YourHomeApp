@@ -1,3 +1,29 @@
+/*-
+ * Copyright (c) 2016 Coteq, Johan Cosemans
+ * All rights reserved.
+ *
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 package net.yourhome.app.widget;
 
 import java.util.ArrayList;
@@ -8,12 +34,6 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import net.yourhome.app.util.APICaller;
-import net.yourhome.app.util.ColorPickerActivity;
-import net.yourhome.app.util.Configuration;
-import net.yourhome.app.views.SpinnerKeyValue;
-import net.yourhome.app.R;
 
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
@@ -41,6 +61,11 @@ import android.widget.ProgressBar;
 import android.widget.RemoteViews;
 import android.widget.Spinner;
 import android.widget.Toast;
+import net.yourhome.app.R;
+import net.yourhome.app.util.APICaller;
+import net.yourhome.app.util.ColorPickerActivity;
+import net.yourhome.app.util.Configuration;
+import net.yourhome.app.views.SpinnerKeyValue;
 
 public class WidgetConfigurationActivity extends Activity {
 	private Activity me = this;
@@ -63,7 +88,7 @@ public class WidgetConfigurationActivity extends Activity {
 	private ArrayList<SpinnerKeyValue<WidgetTypes, String>> widgetTypes;
 	private ArrayList<SpinnerKeyValue<String, String>> widgetActionTypes;
 
-	//private SpinnerKeyValue<WidgetTypes, String> selectedWidgetType;
+	// private SpinnerKeyValue<WidgetTypes, String> selectedWidgetType;
 	private SpinnerKeyValue<String, String> selectedActionType;
 
 	private String selectedIcon;
@@ -82,21 +107,23 @@ public class WidgetConfigurationActivity extends Activity {
 		if (requestCode == ColorPickerActivity.REQUEST_COLOR) {
 			// Make sure the request was successful
 			if (resultCode == RESULT_OK && data != null) {
-				if(data.getStringExtra(ColorPickerActivity.STORE_COLOR_KEY).equals(COLOR_KEY_ICON)) {
-					iconColor = data.getIntExtra(COLOR_KEY_ICON, iconColor);
-					Log.d("widget", "Result from colorpicker: " + iconColor);
-					if (selectedIconPreview != null) {
-						Bitmap iconBitmap = Configuration.getInstance().getWidgetIcon(me, selectedIcon, 100, iconColor);
-						selectedIconPreview.setImageBitmap(iconBitmap);
+				if (data.getStringExtra(ColorPickerActivity.STORE_COLOR_KEY).equals(this.COLOR_KEY_ICON)) {
+					this.iconColor = data.getIntExtra(this.COLOR_KEY_ICON, this.iconColor);
+					Log.d("widget", "Result from colorpicker: " + this.iconColor);
+					if (this.selectedIconPreview != null) {
+						Bitmap iconBitmap = Configuration.getInstance().getWidgetIcon(this.me, this.selectedIcon, 100, this.iconColor);
+						this.selectedIconPreview.setImageBitmap(iconBitmap);
 					}
-				}else if(data.getStringExtra(ColorPickerActivity.STORE_COLOR_KEY).equals(COLOR_KEY_ICON_BACKGROUND)) {
-					iconBackgroundColor = data.getIntExtra(COLOR_KEY_ICON_BACKGROUND, iconColor);
-					Log.d("widget", "Result from colorpicker: " + iconBackgroundColor);
-					if (selectedIconPreview != null) {
-						//Bitmap iconBitmap = Configuration.getInstance().getWidgetIcon(me, selectedIcon, 100, iconColor);
-						//selectedIconPreview.setImageBitmap(iconBitmap);
+				} else if (data.getStringExtra(ColorPickerActivity.STORE_COLOR_KEY).equals(this.COLOR_KEY_ICON_BACKGROUND)) {
+					this.iconBackgroundColor = data.getIntExtra(this.COLOR_KEY_ICON_BACKGROUND, this.iconColor);
+					Log.d("widget", "Result from colorpicker: " + this.iconBackgroundColor);
+					if (this.selectedIconPreview != null) {
+						// Bitmap iconBitmap =
+						// Configuration.getInstance().getWidgetIcon(me,
+						// selectedIcon, 100, iconColor);
+						// selectedIconPreview.setImageBitmap(iconBitmap);
 						final Spinner widgetIconSpinner = (Spinner) findViewById(R.id.widget_icon);
-						widgetIconSpinner.setBackgroundColor(iconBackgroundColor);
+						widgetIconSpinner.setBackgroundColor(this.iconBackgroundColor);
 					}
 				}
 
@@ -106,98 +133,106 @@ public class WidgetConfigurationActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);		
+		super.onCreate(savedInstanceState);
 		Log.d("WidgetConfigurationActivity", "onCreate");
 		setContentView(R.layout.widget_configuration);
-		widgetTypes = new ArrayList<SpinnerKeyValue<WidgetTypes, String>>();
-		widgetTypes.add(new SpinnerKeyValue<WidgetTypes, String>(WidgetTypes.SCENE, getResources().getString(R.string.widget_activate_scene)));
+		this.widgetTypes = new ArrayList<SpinnerKeyValue<WidgetTypes, String>>();
+		this.widgetTypes.add(new SpinnerKeyValue<WidgetTypes, String>(WidgetTypes.SCENE, getResources().getString(R.string.widget_activate_scene)));
 
-
-		if(settings == null) {
-			settings = getBaseContext().getSharedPreferences("USER", Context.MODE_PRIVATE);
+		if (this.settings == null) {
+			this.settings = getBaseContext().getSharedPreferences("USER", Context.MODE_PRIVATE);
 		}
 		// Check last used color and default this one
-		iconColor = settings.getInt(LAST_USED_COLOR, iconColor);
-		iconBackgroundColor = settings.getInt(LAST_USED_BACKGROUND_COLOR, iconColor);
+		this.iconColor = this.settings.getInt(this.LAST_USED_COLOR, this.iconColor);
+		this.iconBackgroundColor = this.settings.getInt(this.LAST_USED_BACKGROUND_COLOR, this.iconColor);
 
 		/* Fill spinners */
 
 		// Fetch all scenes. Once completed, fill the dropdown.
-		APICaller loader = new WidgetCaller(me);
-    	loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "/Scenes");
-    	
-		/*Spinner widgetTypeSpinner = (Spinner) findViewById(R.id.widget_type);
-        ArrayAdapter widgetTypeSpinnerAdapter = new ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item, widgetTypes);
-        widgetTypeSpinner.setAdapter(widgetTypeSpinnerAdapter);
-        widgetTypeSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-		    public void onItemSelected(AdapterView<?> parent, View view, 
-		            int pos, long id) {
-		    	// Get selected values
-		    	selectedWidgetType = (SpinnerKeyValue<WidgetTypes,String>) parent.getItemAtPosition(pos);
-		    	switch(selectedWidgetType.getKey()) {
-		    	/*case	ZWAVE_GENERAL_COMMAND :
-    				widgetActionTypes = new ArrayList<SpinnerKeyValue<String,String>>();
-		    		widgetActionTypes.add(new SpinnerKeyValue<String,String>(GeneralCommands.ALL_OFF.convert(), "All Off"));
-		    		widgetActionTypes.add(new SpinnerKeyValue<String,String>(GeneralCommands.ALL_ON.convert(), "All On"));
+		APICaller loader = new WidgetCaller(this.me);
+		loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "/Scenes");
 
-			    	Spinner widgetActionTypeSpinner = (Spinner) findViewById(R.id.widget_action);
-			        ArrayAdapter widgetActionTypeSpinnerAdapter = new ArrayAdapter(me,android.R.layout.simple_spinner_dropdown_item, widgetActionTypes);
-			        widgetActionTypeSpinner.setAdapter(widgetActionTypeSpinnerAdapter);	
-			        
-		    		break;*//*
-		    	case SCENE :
-		    		// Fetch all scenes. Once completed, fill the dropdown.
-		    		/*APICaller loader = new APICaller(me);
-		        	loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "/Scenes");*//*
-		    		break;
-		    	}	    	
-		    }
-		    public void onNothingSelected(AdapterView<?> parent) {}
-        });
-        */
+		/*
+		 * Spinner widgetTypeSpinner = (Spinner) findViewById(R.id.widget_type);
+		 * ArrayAdapter widgetTypeSpinnerAdapter = new
+		 * ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item,
+		 * widgetTypes); widgetTypeSpinner.setAdapter(widgetTypeSpinnerAdapter);
+		 * widgetTypeSpinner.setOnItemSelectedListener(new
+		 * OnItemSelectedListener() { public void onItemSelected(AdapterView<?>
+		 * parent, View view, int pos, long id) { // Get selected values
+		 * selectedWidgetType = (SpinnerKeyValue<WidgetTypes,String>)
+		 * parent.getItemAtPosition(pos); switch(selectedWidgetType.getKey()) {
+		 * /*case ZWAVE_GENERAL_COMMAND : widgetActionTypes = new
+		 * ArrayList<SpinnerKeyValue<String,String>>();
+		 * widgetActionTypes.add(new
+		 * SpinnerKeyValue<String,String>(GeneralCommands.ALL_OFF.convert(),
+		 * "All Off")); widgetActionTypes.add(new
+		 * SpinnerKeyValue<String,String>(GeneralCommands.ALL_ON.convert(),
+		 * "All On"));
+		 * 
+		 * Spinner widgetActionTypeSpinner = (Spinner)
+		 * findViewById(R.id.widget_action); ArrayAdapter
+		 * widgetActionTypeSpinnerAdapter = new
+		 * ArrayAdapter(me,android.R.layout.simple_spinner_dropdown_item,
+		 * widgetActionTypes);
+		 * widgetActionTypeSpinner.setAdapter(widgetActionTypeSpinnerAdapter);
+		 * 
+		 * break;
+		 *//*
+			 * case SCENE : // Fetch all scenes. Once completed, fill the
+			 * dropdown. /*APICaller loader = new APICaller(me);
+			 * loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
+			 * "/Scenes");
+			 *//*
+			 * break; } } public void onNothingSelected(AdapterView<?> parent)
+			 * {} });
+			 */
 
-        final Spinner widgetIconSpinner = (Spinner) findViewById(R.id.widget_icon);
-        widgetIconSpinner.setAdapter(new IconAdapter(me, R.layout.spinner_icon_row, HomeWidgetProvider.getIcons()));
-        widgetIconSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-		    public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-		    	selectedIcon = (String) parent.getItemAtPosition(pos);
-		    	selectedIconPreview = (ImageView) view.findViewById(R.id.image);
-		    }
+		final Spinner widgetIconSpinner = (Spinner) findViewById(R.id.widget_icon);
+		widgetIconSpinner.setAdapter(new IconAdapter(this.me, R.layout.spinner_icon_row, HomeWidgetProvider.getIcons()));
+		widgetIconSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+				WidgetConfigurationActivity.this.selectedIcon = (String) parent.getItemAtPosition(pos);
+				WidgetConfigurationActivity.this.selectedIconPreview = (ImageView) view.findViewById(R.id.image);
+			}
+
 			@Override
-			public void onNothingSelected(AdapterView<?> parent) { }
-        });
-		widgetIconSpinner.setBackgroundColor(iconBackgroundColor);
+			public void onNothingSelected(AdapterView<?> parent) {
+			}
+		});
+		widgetIconSpinner.setBackgroundColor(this.iconBackgroundColor);
 
 		Spinner widgetActionTypeSpinner = (Spinner) findViewById(R.id.widget_action);
-        widgetActionTypeSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-		    public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-		    	selectedActionType = (SpinnerKeyValue<String,String>) parent.getItemAtPosition(pos);
+		widgetActionTypeSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+				WidgetConfigurationActivity.this.selectedActionType = (SpinnerKeyValue<String, String>) parent.getItemAtPosition(pos);
 
-				EditText label = (EditText)findViewById(R.id.widget_label);
-		    	label.setText(selectedActionType.getValue());
+				EditText label = (EditText) findViewById(R.id.widget_label);
+				label.setText(WidgetConfigurationActivity.this.selectedActionType.getValue());
 
-		    	//widgetIconSpinner.requestFocus();
-		    }
+				// widgetIconSpinner.requestFocus();
+			}
+
 			@Override
-			public void onNothingSelected(AdapterView<?> parent) { }
-        });
-        
-        
+			public void onNothingSelected(AdapterView<?> parent) {
+			}
+		});
+
 		/* Buttons */
 
-        Drawable openColorPickerIcon = Configuration.getInstance().getAppIconDrawable(this.getBaseContext(), R.string.icon_search, 30);
-        Drawable cancelButtonIcon = Configuration.getInstance().getAppIconDrawable(this.getBaseContext(), R.string.icon_close, 30);
-        Drawable createButtonIcon = Configuration.getInstance().getAppIconDrawable(this.getBaseContext(), R.string.icon_file_o, 30);
+		Drawable openColorPickerIcon = Configuration.getInstance().getAppIconDrawable(this.getBaseContext(), R.string.icon_search, 30);
+		Drawable cancelButtonIcon = Configuration.getInstance().getAppIconDrawable(this.getBaseContext(), R.string.icon_close, 30);
+		Drawable createButtonIcon = Configuration.getInstance().getAppIconDrawable(this.getBaseContext(), R.string.icon_file_o, 30);
 
-        Button openColorPickerButton = (Button) findViewById(R.id.widget_start_colorpicker_btn);
-        openColorPickerButton.setCompoundDrawablesWithIntrinsicBounds(openColorPickerIcon, null, null, null);
-        openColorPickerButton.setOnClickListener(new OnClickListener() {
+		Button openColorPickerButton = (Button) findViewById(R.id.widget_start_colorpicker_btn);
+		openColorPickerButton.setCompoundDrawablesWithIntrinsicBounds(openColorPickerIcon, null, null, null);
+		openColorPickerButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent intent = new Intent(me, ColorPickerActivity.class);
+				Intent intent = new Intent(WidgetConfigurationActivity.this.me, ColorPickerActivity.class);
 				Bundle intentExtras = new Bundle();
-				intentExtras.putString(ColorPickerActivity.STORE_COLOR_KEY, COLOR_KEY_ICON);
-				intentExtras.putInt(COLOR_KEY_ICON, iconColor);
+				intentExtras.putString(ColorPickerActivity.STORE_COLOR_KEY, WidgetConfigurationActivity.this.COLOR_KEY_ICON);
+				intentExtras.putInt(WidgetConfigurationActivity.this.COLOR_KEY_ICON, WidgetConfigurationActivity.this.iconColor);
 				intentExtras.putBoolean(ColorPickerActivity.SHOW_CIRCLE_PICKER, true);
 				intentExtras.putBoolean(ColorPickerActivity.SHOW_OPACITY_SLIDER, false);
 				intent.putExtras(intentExtras);
@@ -209,17 +244,17 @@ public class WidgetConfigurationActivity extends Activity {
 		openBackgroundColorPickerButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent intent = new Intent(me,ColorPickerActivity.class);
-				Bundle intentExtras =  new Bundle();
-				intentExtras.putString(ColorPickerActivity.STORE_COLOR_KEY, COLOR_KEY_ICON_BACKGROUND);
-				intentExtras.putInt(COLOR_KEY_ICON_BACKGROUND, iconBackgroundColor);
-                intentExtras.putBoolean(ColorPickerActivity.SHOW_CIRCLE_PICKER, true);
-                intentExtras.putBoolean(ColorPickerActivity.SHOW_OPACITY_SLIDER, false);
+				Intent intent = new Intent(WidgetConfigurationActivity.this.me, ColorPickerActivity.class);
+				Bundle intentExtras = new Bundle();
+				intentExtras.putString(ColorPickerActivity.STORE_COLOR_KEY, WidgetConfigurationActivity.this.COLOR_KEY_ICON_BACKGROUND);
+				intentExtras.putInt(WidgetConfigurationActivity.this.COLOR_KEY_ICON_BACKGROUND, WidgetConfigurationActivity.this.iconBackgroundColor);
+				intentExtras.putBoolean(ColorPickerActivity.SHOW_CIRCLE_PICKER, true);
+				intentExtras.putBoolean(ColorPickerActivity.SHOW_OPACITY_SLIDER, false);
 				intent.putExtras(intentExtras);
 				startActivityForResult(intent, ColorPickerActivity.REQUEST_COLOR);
 			}
 		});
-        
+
 		Button cancelButton = (Button) findViewById(R.id.widget_cancel_btn);
 		cancelButton.setCompoundDrawablesWithIntrinsicBounds(cancelButtonIcon, null, null, null);
 		cancelButton.setOnClickListener(new OnClickListener() {
@@ -229,7 +264,7 @@ public class WidgetConfigurationActivity extends Activity {
 				finish();
 			}
 		});
-		
+
 		Button createButton = (Button) findViewById(R.id.widget_create_btn);
 		createButton.setCompoundDrawablesWithIntrinsicBounds(createButtonIcon, null, null, null);
 		createButton.setOnClickListener(new OnClickListener() {
@@ -241,43 +276,38 @@ public class WidgetConfigurationActivity extends Activity {
 				if (extras != null) {
 					mAppWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
 				}
-				
-				EditText label = (EditText)findViewById(R.id.widget_label);
-				
+
+				EditText label = (EditText) findViewById(R.id.widget_label);
+
 				/* Build widget view */
-				Editor edit = settings.edit();
+				Editor edit = WidgetConfigurationActivity.this.settings.edit();
 				Set<String> widgetConfig = new HashSet<String>();
-				//widgetConfig.add("WIDGET_TYPE="+selectedWidgetType.getKey());
-				widgetConfig.add("WIDGET_TYPE="+WidgetTypes.SCENE);
-				widgetConfig.add("WIDGET_ACTION_TYPE="+selectedActionType.getKey());
-				widgetConfig.add("WIDGET_LABEL="+label.getText());
-				widgetConfig.add("WIDGET_ICON="+selectedIcon);
-				widgetConfig.add("WIDGET_COLOR="+iconColor);
-				widgetConfig.add("WIDGET_BACKGROUND_COLOR="+iconBackgroundColor);
-				edit.putStringSet("WIDGET_"+mAppWidgetId, widgetConfig);
+				// widgetConfig.add("WIDGET_TYPE="+selectedWidgetType.getKey());
+				widgetConfig.add("WIDGET_TYPE=" + WidgetTypes.SCENE);
+				widgetConfig.add("WIDGET_ACTION_TYPE=" + WidgetConfigurationActivity.this.selectedActionType.getKey());
+				widgetConfig.add("WIDGET_LABEL=" + label.getText());
+				widgetConfig.add("WIDGET_ICON=" + WidgetConfigurationActivity.this.selectedIcon);
+				widgetConfig.add("WIDGET_COLOR=" + WidgetConfigurationActivity.this.iconColor);
+				widgetConfig.add("WIDGET_BACKGROUND_COLOR=" + WidgetConfigurationActivity.this.iconBackgroundColor);
+				edit.putStringSet("WIDGET_" + mAppWidgetId, widgetConfig);
 				edit.commit();
-					
-				RemoteViews views = HomeWidgetProvider.buildWidgetView(getBaseContext(), 
-																		mAppWidgetId,
-																		//selectedWidgetType.getKey(),
-																		WidgetTypes.SCENE,
-																		selectedActionType.getKey(),
-																		label.getText().toString(),
-																		selectedIcon,
-																		iconColor,
-																		iconBackgroundColor);
+
+				RemoteViews views = HomeWidgetProvider.buildWidgetView(getBaseContext(), mAppWidgetId,
+						// selectedWidgetType.getKey(),
+						WidgetTypes.SCENE, WidgetConfigurationActivity.this.selectedActionType.getKey(), label.getText().toString(), WidgetConfigurationActivity.this.selectedIcon, WidgetConfigurationActivity.this.iconColor, WidgetConfigurationActivity.this.iconBackgroundColor);
 				Intent resultValue = new Intent();
 				resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
-				if(views != null) {
-		            // Tell the AppWidgetManager to perform an update on the app widget
+				if (views != null) {
+					// Tell the AppWidgetManager to perform an update on the app
+					// widget
 					AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(getBaseContext());
-		            appWidgetManager.updateAppWidget(mAppWidgetId, views);   
-	
-		            // Store last used color
-					edit.putInt(LAST_USED_COLOR, iconColor);
+					appWidgetManager.updateAppWidget(mAppWidgetId, views);
+
+					// Store last used color
+					edit.putInt(WidgetConfigurationActivity.this.LAST_USED_COLOR, WidgetConfigurationActivity.this.iconColor);
 					edit.commit();
-					
-		            // Build result
+
+					// Build result
 					setResult(RESULT_OK, resultValue);
 					finish();
 				} else {
@@ -285,13 +315,13 @@ public class WidgetConfigurationActivity extends Activity {
 					finish();
 				}
 			}
-		});	
+		});
 	}
-	
+
 	public void onDestroy() {
-		Editor edit = settings.edit();
-		edit.putInt(LAST_USED_COLOR, iconColor);
-		edit.putInt(LAST_USED_BACKGROUND_COLOR, iconBackgroundColor);
+		Editor edit = this.settings.edit();
+		edit.putInt(this.LAST_USED_COLOR, this.iconColor);
+		edit.putInt(this.LAST_USED_BACKGROUND_COLOR, this.iconBackgroundColor);
 		edit.commit();
 		super.onDestroy();
 	}
@@ -304,7 +334,7 @@ public class WidgetConfigurationActivity extends Activity {
 
 		@Override
 		public View getDropDownView(int position, View convertView, ViewGroup parent) {
-			return getView(position, convertView, parent);
+			return this.getView(position, convertView, parent);
 		}
 
 		@Override
@@ -312,10 +342,10 @@ public class WidgetConfigurationActivity extends Activity {
 			LayoutInflater inflater = getLayoutInflater();
 			View row = inflater.inflate(R.layout.spinner_icon_row, parent, false);
 			ImageView icon = (ImageView) row.findViewById(R.id.image);
-			Bitmap iconBitmap = Configuration.getInstance().getWidgetIcon(me, this.getItem(position), 100, iconColor);
+			Bitmap iconBitmap = Configuration.getInstance().getWidgetIcon(WidgetConfigurationActivity.this.me, this.getItem(position), 100, WidgetConfigurationActivity.this.iconColor);
 			icon.setImageBitmap(iconBitmap);
 
-			//row.setBackgroundColor(getResources().getColor(R.color.grey));
+			// row.setBackgroundColor(getResources().getColor(R.color.grey));
 			return row;
 		}
 	}
@@ -336,18 +366,20 @@ public class WidgetConfigurationActivity extends Activity {
 		@Override
 		protected void onPostExecute(String result) {
 			if (result == null) {
-				Toast.makeText(me, "Could not connect to homeserver to retrieve scenes", Toast.LENGTH_LONG).show();
+				Toast.makeText(WidgetConfigurationActivity.this.me, "Could not connect to homeserver to retrieve scenes", Toast.LENGTH_LONG).show();
 			} else {
 
-				widgetActionTypes = new ArrayList<SpinnerKeyValue<String, String>>();
+				WidgetConfigurationActivity.this.widgetActionTypes = new ArrayList<SpinnerKeyValue<String, String>>();
 				try {
 					JSONArray scenesArray = new JSONArray(result);
 					for (int i = 0; i < scenesArray.length(); i++) {
 						JSONObject scenesObject = scenesArray.getJSONObject(i);
 						try {
 							String name = scenesObject.getJSONObject("description").getString("name");
-							widgetActionTypes.add(new SpinnerKeyValue<String, String>(scenesObject.getInt("id") + "", name));
-						}catch(JSONException json){json.printStackTrace();}
+							WidgetConfigurationActivity.this.widgetActionTypes.add(new SpinnerKeyValue<String, String>(scenesObject.getInt("id") + "", name));
+						} catch (JSONException json) {
+							json.printStackTrace();
+						}
 					}
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
@@ -355,7 +387,7 @@ public class WidgetConfigurationActivity extends Activity {
 				}
 
 				Spinner widgetActionTypeSpinner = (Spinner) findViewById(R.id.widget_action);
-				ArrayAdapter widgetActionTypeSpinnerAdapter = new ArrayAdapter(me, android.R.layout.simple_spinner_dropdown_item, widgetActionTypes);
+				ArrayAdapter widgetActionTypeSpinnerAdapter = new ArrayAdapter(WidgetConfigurationActivity.this.me, android.R.layout.simple_spinner_dropdown_item, WidgetConfigurationActivity.this.widgetActionTypes);
 				widgetActionTypeSpinner.setAdapter(widgetActionTypeSpinnerAdapter);
 			}
 

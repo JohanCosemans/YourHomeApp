@@ -1,4 +1,4 @@
 include ':app'
-include ':YourHomeCommon'
-project(':YourHomeCommon').projectDir = new File(settingsDir, '../YourHomeCommon')
+/*include ':YourHomeCommon'
+project(':YourHomeCommon').projectDir = new File(settingsDir, '../YourHomeCommon')*/
 rootProject.name = 'YourHomeApp'

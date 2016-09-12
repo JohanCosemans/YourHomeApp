@@ -31,62 +31,68 @@ import android.util.Log;
 
 public class WampCraConnection extends WampConnection implements WampCra {
 
-    public void authenticate(final AuthHandler authHandler, final String authKey, final String authSecret){
-        authenticate(authHandler, authKey, authSecret, null);
-    }
-    
-    public void authenticate(final AuthHandler authHandler, final String authKey, final String authSecret, Object authExtra) {
-        CallHandler callHandler = new CallHandler(){
+	@Override
+	public void authenticate(final AuthHandler authHandler, final String authKey, final String authSecret) {
+		this.authenticate(authHandler, authKey, authSecret, null);
+	}
 
-            public void onResult(Object challenge) {
-                
-                String sig = null;
-                try {
-                    sig = authSignature((String)challenge, authSecret);
-                } catch (SignatureException e) {
-                    Log.e("WampCraConnection:authenicate",e.toString());
-                }
-                
-                call(Wamp.URI_WAMP_PROCEDURE + "auth", WampCraPermissions.class, new CallHandler(){
+	@Override
+	public void authenticate(final AuthHandler authHandler, final String authKey, final String authSecret, Object authExtra) {
+		CallHandler callHandler = new CallHandler() {
 
-                    public void onResult(Object result) {
-                        authHandler.onAuthSuccess(result);
-                    }
+			@Override
+			public void onResult(Object challenge) {
 
-                    public void onError(String errorUri, String errorDesc) {
-                        authHandler.onAuthError(errorUri,errorDesc);                
-                    }
-                    
-                }, sig);
-                
-                
-            }
+				String sig = null;
+				try {
+					sig = WampCraConnection.this.authSignature((String) challenge, authSecret);
+				} catch (SignatureException e) {
+					Log.e("WampCraConnection:authenicate", e.toString());
+				}
 
-            public void onError(String errorUri, String errorDesc) {
-                authHandler.onAuthError(errorUri,errorDesc);                
-            }
-            
-        };
-        if (authExtra != null)
-            call(Wamp.URI_WAMP_PROCEDURE + "authreq", String.class, callHandler, authKey, authExtra);
-        else
-            call(Wamp.URI_WAMP_PROCEDURE + "authreq", String.class, callHandler, authKey);
-    }
+				WampCraConnection.this.call(Wamp.URI_WAMP_PROCEDURE + "auth", WampCraPermissions.class, new CallHandler() {
 
-    public String authSignature(String authChallenge, String authSecret) throws SignatureException{
-        try {
-            Key sk = new SecretKeySpec(authSecret.getBytes(), HASH_ALGORITHM);
-            Mac mac = Mac.getInstance(sk.getAlgorithm());
-            mac.init(sk);
-            final byte[] hmac = mac.doFinal(authChallenge.getBytes());
-            return Base64.encodeToString(hmac,Base64.NO_WRAP);
-        } catch (NoSuchAlgorithmException e1) {
-            throw new SignatureException("error building signature, no such algorithm in device " + HASH_ALGORITHM);
-        } catch (InvalidKeyException e) {
-            throw new SignatureException("error building signature, invalid key " + HASH_ALGORITHM);
-        }
-    }
+					@Override
+					public void onResult(Object result) {
+						authHandler.onAuthSuccess(result);
+					}
 
-    private static final String HASH_ALGORITHM = "HmacSHA256";
-    
+					@Override
+					public void onError(String errorUri, String errorDesc) {
+						authHandler.onAuthError(errorUri, errorDesc);
+					}
+
+				}, sig);
+
+			}
+
+			@Override
+			public void onError(String errorUri, String errorDesc) {
+				authHandler.onAuthError(errorUri, errorDesc);
+			}
+
+		};
+		if (authExtra != null) {
+			this.call(Wamp.URI_WAMP_PROCEDURE + "authreq", String.class, callHandler, authKey, authExtra);
+		} else {
+			this.call(Wamp.URI_WAMP_PROCEDURE + "authreq", String.class, callHandler, authKey);
+		}
+	}
+
+	public String authSignature(String authChallenge, String authSecret) throws SignatureException {
+		try {
+			Key sk = new SecretKeySpec(authSecret.getBytes(), WampCraConnection.HASH_ALGORITHM);
+			Mac mac = Mac.getInstance(sk.getAlgorithm());
+			mac.init(sk);
+			final byte[] hmac = mac.doFinal(authChallenge.getBytes());
+			return Base64.encodeToString(hmac, Base64.NO_WRAP);
+		} catch (NoSuchAlgorithmException e1) {
+			throw new SignatureException("error building signature, no such algorithm in device " + WampCraConnection.HASH_ALGORITHM);
+		} catch (InvalidKeyException e) {
+			throw new SignatureException("error building signature, invalid key " + WampCraConnection.HASH_ALGORITHM);
+		}
+	}
+
+	private static final String HASH_ALGORITHM = "HmacSHA256";
+
 }

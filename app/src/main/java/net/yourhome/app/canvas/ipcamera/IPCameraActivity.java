@@ -1,3 +1,29 @@
+/*-
+ * Copyright (c) 2016 Coteq, Johan Cosemans
+ * All rights reserved.
+ *
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 package net.yourhome.app.canvas.ipcamera;
 
 import java.io.FileNotFoundException;
@@ -9,19 +35,12 @@ import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaPlayer;
 
-import net.yourhome.app.R;
-import net.yourhome.app.bindings.AbstractBinding;
-import net.yourhome.app.bindings.BindingController;
-import net.yourhome.app.bindings.IPCameraBinding;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -34,9 +53,12 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+import net.yourhome.app.R;
+import net.yourhome.app.bindings.AbstractBinding;
+import net.yourhome.app.bindings.BindingController;
+import net.yourhome.app.bindings.IPCameraBinding;
 
 public class IPCameraActivity extends Activity implements IVLCVout.Callback, LibVLC.HardwareAccelerationError {
 
@@ -48,15 +70,14 @@ public class IPCameraActivity extends Activity implements IVLCVout.Callback, Lib
 	private static SurfaceView mSurface;
 	private SurfaceHolder holder;
 
-    protected IPCameraBinding cameraBinding = null;
+	protected IPCameraBinding cameraBinding = null;
 
 	// media player
 	private LibVLC libvlc;
-    private MediaPlayer mMediaPlayer = null;
+	private MediaPlayer mMediaPlayer = null;
 	private int mVideoWidth;
 	private int mVideoHeight;
 	private final static int VideoSizeChanged = -1;
-	
 
 	private static RelativeLayout loading;
 
@@ -65,28 +86,32 @@ public class IPCameraActivity extends Activity implements IVLCVout.Callback, Lib
 	 *************/
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-	   requestWindowFeature(Window.FEATURE_NO_TITLE);						 // Set fullscreen
-	   getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,     // Set fullscreen
-			   WindowManager.LayoutParams.FLAG_FULLSCREEN); // Set fullscreen
-	    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);   // Set screen on landscape
+		requestWindowFeature(Window.FEATURE_NO_TITLE); // Set fullscreen
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, // Set
+																			// fullscreen
+				WindowManager.LayoutParams.FLAG_FULLSCREEN); // Set fullscreen
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); // Set
+																			// screen
+																			// on
+																			// landscape
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.ipcamera_main);
-		loading = (RelativeLayout) this.findViewById(R.id.ipcamera_loading);
+		IPCameraActivity.loading = (RelativeLayout) this.findViewById(R.id.ipcamera_loading);
 
-		if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
 
-			mSurface = (SurfaceView) findViewById(R.id.surface);
-			holder = mSurface.getHolder();
-			//holder.addCallback(this);
-			loading.setVisibility(View.VISIBLE);
-			//mSurface.setVisibility(View.INVISIBLE);
-			mSurface.setZOrderMediaOverlay(true);
-            //mSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
-            //mSurface.setZOrderOnTop(true);
-			//mSurface.setBackgroundColor(Color.GRAY);
-			//mSurface.bringToFront();
+			IPCameraActivity.mSurface = (SurfaceView) findViewById(R.id.surface);
+			this.holder = IPCameraActivity.mSurface.getHolder();
+			// holder.addCallback(this);
+			IPCameraActivity.loading.setVisibility(View.VISIBLE);
+			// mSurface.setVisibility(View.INVISIBLE);
+			IPCameraActivity.mSurface.setZOrderMediaOverlay(true);
+			// mSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
+			// mSurface.setZOrderOnTop(true);
+			// mSurface.setBackgroundColor(Color.GRAY);
+			// mSurface.bringToFront();
 			// Attach close to action
-			ImageButton closeButton = (ImageButton)this.findViewById(R.id.ip_camera_close);
+			ImageButton closeButton = (ImageButton) this.findViewById(R.id.ip_camera_close);
 			closeButton.setOnClickListener(new OnClickListener() {
 
 				@Override
@@ -101,70 +126,72 @@ public class IPCameraActivity extends Activity implements IVLCVout.Callback, Lib
 			if (intent != null) {
 				Bundle extras = intent.getExtras();
 				if (extras != null) {
-					videoUrl = extras.getString(IPCameraBinding.VIDEO_PATH);
-                    String stageElementId = extras.getString(IPCameraBinding.STAGE_ELEMENT_ID);
+					this.videoUrl = extras.getString(IPCameraBinding.VIDEO_PATH);
+					String stageElementId = extras.getString(IPCameraBinding.STAGE_ELEMENT_ID);
 
-                    AbstractBinding binding = BindingController.getInstance().getBindingFor(stageElementId);
-                    if(binding != null && binding instanceof IPCameraBinding) {
-                        cameraBinding = (IPCameraBinding)binding;
-                        loading.setBackground(new BitmapDrawable(getResources(),cameraBinding.getImage()));
-                    }else {
-                        // Try to read the image path from the extras
-                        String imagePath = extras.getString("imagePath");
-                        if(imagePath!=null) {
-                            try {
-                                Bitmap snapshotImage = BitmapFactory.decodeStream(getBaseContext().openFileInput(imagePath));
-                                if(snapshotImage != null) {
-                                    loading.setBackground(new BitmapDrawable(getResources(), snapshotImage));
-                                    getBaseContext().deleteFile(imagePath);
-                                }
-                            } catch (FileNotFoundException e) {
-                            }
-                        }
-                    }
+					AbstractBinding binding = BindingController.getInstance().getBindingFor(stageElementId);
+					if (binding != null && binding instanceof IPCameraBinding) {
+						this.cameraBinding = (IPCameraBinding) binding;
+						IPCameraActivity.loading.setBackground(new BitmapDrawable(getResources(), this.cameraBinding.getImage()));
+					} else {
+						// Try to read the image path from the extras
+						String imagePath = extras.getString("imagePath");
+						if (imagePath != null) {
+							try {
+								Bitmap snapshotImage = BitmapFactory.decodeStream(getBaseContext().openFileInput(imagePath));
+								if (snapshotImage != null) {
+									IPCameraActivity.loading.setBackground(new BitmapDrawable(getResources(), snapshotImage));
+									getBaseContext().deleteFile(imagePath);
+								}
+							} catch (FileNotFoundException e) {
+							}
+						}
+					}
 				}
 			}
-			Log.d(TAG, "Playing back " + videoUrl);
+			Log.d(IPCameraActivity.TAG, "Playing back " + this.videoUrl);
 		}
 	}
 
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
-		setSize(mVideoWidth, mVideoHeight);
+		this.setSize(this.mVideoWidth, this.mVideoHeight);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-			createPlayer(videoUrl);
+		if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+			this.createPlayer(this.videoUrl);
 		}
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
-		releasePlayer();
+		this.releasePlayer();
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		releasePlayer();
+		this.releasePlayer();
 	}
 
 	/*************
 	 * Surface
 	 *************/
 	private void setSize(int width, int height) {
-		mVideoWidth = width;
-		mVideoHeight = height;
-		if (mVideoWidth * mVideoHeight <= 1)
+		this.mVideoWidth = width;
+		this.mVideoHeight = height;
+		if (this.mVideoWidth * this.mVideoHeight <= 1) {
 			return;
+		}
 
-        if(holder == null || mSurface == null)
-            return;
+		if (this.holder == null || IPCameraActivity.mSurface == null) {
+			return;
+		}
 
 		// get screen size
 		int w = getWindow().getDecorView().getWidth();
@@ -179,145 +206,148 @@ public class IPCameraActivity extends Activity implements IVLCVout.Callback, Lib
 			h = i;
 		}
 
-		float videoAR = (float) mVideoWidth / (float) mVideoHeight;
+		float videoAR = (float) this.mVideoWidth / (float) this.mVideoHeight;
 		float screenAR = (float) w / (float) h;
 
-		if (screenAR < videoAR)
+		if (screenAR < videoAR) {
 			h = (int) (w / videoAR);
-		else
+		} else {
 			w = (int) (h * videoAR);
+		}
 
 		// force surface buffer size
-		holder.setFixedSize(mVideoWidth, mVideoHeight);
+		this.holder.setFixedSize(this.mVideoWidth, this.mVideoHeight);
 
 		// set display size
-		LayoutParams lp = mSurface.getLayoutParams();
+		LayoutParams lp = IPCameraActivity.mSurface.getLayoutParams();
 		lp.width = w;
 		lp.height = h;
-		mSurface.setLayoutParams(lp);
-		mSurface.invalidate();
+		IPCameraActivity.mSurface.setLayoutParams(lp);
+		IPCameraActivity.mSurface.invalidate();
 	}
+
 	/*************
 	 * Player
 	 *************/
 
 	private void createPlayer(String media) {
-        releasePlayer();
-        try {
+		this.releasePlayer();
+		try {
 
-            // Create LibVLC
-            // TODO: make this more robust, and sync with audio demo
-            ArrayList<String> options = new ArrayList<String>();
-            //options.add("--subsdec-encoding <encoding>");
-            options.add("--aout=opensles");
-            options.add("--audio-time-stretch"); // time stretching
-            options.add("-vvv"); // verbosity
-            libvlc = new LibVLC(options);
-            libvlc.setOnHardwareAccelerationError(this);
-            holder.setKeepScreenOn(true);
+			// Create LibVLC
+			// TODO: make this more robust, and sync with audio demo
+			ArrayList<String> options = new ArrayList<String>();
+			// options.add("--subsdec-encoding <encoding>");
+			options.add("--aout=opensles");
+			options.add("--audio-time-stretch"); // time stretching
+			options.add("-vvv"); // verbosity
+			this.libvlc = new LibVLC(options);
+			this.libvlc.setOnHardwareAccelerationError(this);
+			this.holder.setKeepScreenOn(true);
 
-            // Create media player
-            mMediaPlayer = new MediaPlayer(libvlc);
-            mMediaPlayer.setEventListener(mPlayerListener);
+			// Create media player
+			this.mMediaPlayer = new MediaPlayer(this.libvlc);
+			this.mMediaPlayer.setEventListener(this.mPlayerListener);
 
-            // Set up video output
-            final IVLCVout vout = mMediaPlayer.getVLCVout();
-            vout.setVideoView(mSurface);
-            vout.addCallback(this);
-            vout.attachViews();
+			// Set up video output
+			final IVLCVout vout = this.mMediaPlayer.getVLCVout();
+			vout.setVideoView(IPCameraActivity.mSurface);
+			vout.addCallback(this);
+			vout.attachViews();
 
-            Media m = new Media(libvlc, Uri.parse(media));
-			mMediaPlayer.setMedia(m);
-            mMediaPlayer.play();
-        } catch (Exception e) {
-            Toast.makeText(this, "Error creating player!", Toast.LENGTH_LONG).show();
-        }
+			Media m = new Media(this.libvlc, Uri.parse(media));
+			this.mMediaPlayer.setMedia(m);
+			this.mMediaPlayer.play();
+		} catch (Exception e) {
+			Toast.makeText(this, "Error creating player!", Toast.LENGTH_LONG).show();
+		}
 	}
 
-    private void releasePlayer() {
+	private void releasePlayer() {
 
-		if(mMediaPlayer != null) {
-			mMediaPlayer.stop();
-			final IVLCVout vout = mMediaPlayer.getVLCVout();
+		if (this.mMediaPlayer != null) {
+			this.mMediaPlayer.stop();
+			final IVLCVout vout = this.mMediaPlayer.getVLCVout();
 			vout.removeCallback(this);
 			vout.detachViews();
 		}
-		if (libvlc != null) {
-			holder = null;
-			libvlc.release();
-			libvlc = null;
-			mVideoWidth = 0;
-			mVideoHeight = 0;
+		if (this.libvlc != null) {
+			this.holder = null;
+			this.libvlc.release();
+			this.libvlc = null;
+			this.mVideoWidth = 0;
+			this.mVideoHeight = 0;
 		}
-    }
+	}
 
-    /*************
-     * Events
-     *************/
+	/*************
+	 * Events
+	 *************/
 
-    private MediaPlayer.EventListener mPlayerListener = new MyPlayerListener(this);
+	private MediaPlayer.EventListener mPlayerListener = new MyPlayerListener(this);
 
-    @Override
-    public void onNewLayout(IVLCVout vout, int width, int height, int visibleWidth, int visibleHeight, int sarNum, int sarDen) {
-        if (width * height == 0)
-            return;
+	@Override
+	public void onNewLayout(IVLCVout vout, int width, int height, int visibleWidth, int visibleHeight, int sarNum, int sarDen) {
+		if (width * height == 0) {
+			return;
+		}
 
-        // store video size
-        mVideoWidth = width;
-        mVideoHeight = height;
-        setSize(mVideoWidth, mVideoHeight);
-    }
+		// store video size
+		this.mVideoWidth = width;
+		this.mVideoHeight = height;
+		this.setSize(this.mVideoWidth, this.mVideoHeight);
+	}
 
-    @Override
-    public void onSurfacesCreated(IVLCVout vout) {
+	@Override
+	public void onSurfacesCreated(IVLCVout vout) {
 
-    }
+	}
 
-    @Override
-    public void onSurfacesDestroyed(IVLCVout vout) {
+	@Override
+	public void onSurfacesDestroyed(IVLCVout vout) {
 
-    }
+	}
 
-    private static class MyPlayerListener implements MediaPlayer.EventListener {
-        private WeakReference<IPCameraActivity> mOwner;
+	private static class MyPlayerListener implements MediaPlayer.EventListener {
+		private WeakReference<IPCameraActivity> mOwner;
 
-        public MyPlayerListener(IPCameraActivity owner) {
-            mOwner = new WeakReference<IPCameraActivity>(owner);
-        }
+		public MyPlayerListener(IPCameraActivity owner) {
+			this.mOwner = new WeakReference<IPCameraActivity>(owner);
+		}
 
-        @Override
-        public void onEvent(MediaPlayer.Event event) {
-        	IPCameraActivity player = mOwner.get();
+		@Override
+		public void onEvent(MediaPlayer.Event event) {
+			IPCameraActivity player = this.mOwner.get();
 
-            switch(event.type) {
-                case MediaPlayer.Event.EndReached:
-                    Log.d(TAG, "MediaPlayerEndReached");
-                    player.releasePlayer();
-                    break;
-				case MediaPlayer.Event.Playing:
-					Log.d(TAG, "Playing");
-					//mSurface.setVisibility(View.VISIBLE);
-					loading.setVisibility(View.INVISIBLE);
-                    //mSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
-					break;
-                case MediaPlayer.Event.Paused:
-					Log.d(TAG, "Playing");
-					break;
-                case MediaPlayer.Event.Stopped:
-					Log.d(TAG, "Stopped");
-					break;
-                default:
-					Log.d(TAG, "event:"+event.type);
-                    break;
-            }
-        }
-    }
+			switch (event.type) {
+			case MediaPlayer.Event.EndReached:
+				Log.d(IPCameraActivity.TAG, "MediaPlayerEndReached");
+				player.releasePlayer();
+				break;
+			case MediaPlayer.Event.Playing:
+				Log.d(IPCameraActivity.TAG, "Playing");
+				// mSurface.setVisibility(View.VISIBLE);
+				IPCameraActivity.loading.setVisibility(View.INVISIBLE);
+				// mSurface.getHolder().setFormat(PixelFormat.TRANSPARENT);
+				break;
+			case MediaPlayer.Event.Paused:
+				Log.d(IPCameraActivity.TAG, "Playing");
+				break;
+			case MediaPlayer.Event.Stopped:
+				Log.d(IPCameraActivity.TAG, "Stopped");
+				break;
+			default:
+				Log.d(IPCameraActivity.TAG, "event:" + event.type);
+				break;
+			}
+		}
+	}
 
-    @Override
-    public void eventHardwareAccelerationError() {
-        // Handle errors with hardware acceleration
-        Log.e(TAG, "Error with hardware acceleration");
-        this.releasePlayer();
-        Toast.makeText(this, "Error with hardware acceleration", Toast.LENGTH_LONG).show();
-    }
+	@Override
+	public void eventHardwareAccelerationError() {
+		// Handle errors with hardware acceleration
+		Log.e(IPCameraActivity.TAG, "Error with hardware acceleration");
+		this.releasePlayer();
+		Toast.makeText(this, "Error with hardware acceleration", Toast.LENGTH_LONG).show();
+	}
 }
