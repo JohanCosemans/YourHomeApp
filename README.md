@@ -9,7 +9,8 @@ The core system which runs the home automation software.
 * Git: https://github.com/JohanCosemans/YourHomeServer
 
 ## YourHome Designer
-The configuration center
+
+The configuration center where you can design screen layouts easily with drag and drop to build your layout as you like. You can also configure the system and build rules and scenes to automate your home.
 * Git: https://github.com/JohanCosemans/YourHomeServer
 
 ## YourHome App
