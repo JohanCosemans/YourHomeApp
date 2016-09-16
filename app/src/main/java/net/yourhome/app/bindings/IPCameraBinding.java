@@ -38,6 +38,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.view.View;
 import net.yourhome.app.canvas.ipcamera.IPCameraActivity;
 import net.yourhome.app.net.HomeServerConnector;
@@ -57,6 +58,8 @@ public class IPCameraBinding extends AbstractBinding {
 
 	private Bitmap currentImage;
 	private String videoPath;
+    private Timer refreshTimer;
+    private IPCameraBinding me = this;
 
 	@Override
 	public void destroy() {
@@ -67,8 +70,6 @@ public class IPCameraBinding extends AbstractBinding {
 
 	public IPCameraBinding(String bindingId, JSONObject bindingProperties) throws JSONException {
 		super(bindingId, bindingProperties);
-
-		this.scheduleRefreshSnapshots();
 	}
 
 	@Override
@@ -117,34 +118,27 @@ public class IPCameraBinding extends AbstractBinding {
 		SnapshotRequestMessage snapshotMessage = new SnapshotRequestMessage();
 		snapshotMessage.controlIdentifiers = this.getControlIdentifier();
 		loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, snapshotMessage);
-
-		/*
-		 * SnapshotRequestMessage snapshotMessage = new
-		 * SnapshotRequestMessage(); snapshotMessage.controlIdentifiers =
-		 * this.getControlIdentifier(); try {
-		 * BindingController.getInstance().handleCommand(HomeServerConnector.
-		 * getInstance().sendSyncMessage(snapshotMessage).toString()); } catch
-		 * (Exception e) { e.printStackTrace(); }
-		 */
 	}
 
-	private void scheduleRefreshSnapshots() {
-		// Refresh every 10 minutes
-		Timer t = new Timer();
-		t.schedule(new TimerTask() {
+    public void setRefreshDelay(int delayMs) {
+        if(refreshTimer != null) {
+            refreshTimer.cancel();
+        }
+        refreshTimer = new Timer();
+		// Refresh every 10 minutes (default time)
+        refreshTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				IPCameraBinding.this.refreshSnapshot();
+				me.refreshSnapshot();
 			}
-		}, new Date(), 600000);
+		}, new Date(), delayMs);
 	}
-
 	private class IPCameraSnapshotLoader extends AsyncTask<String, Void, Void> {
 
 		private Bitmap snapshot = null;
 
 		protected void onPreExecute() {
-			IPCameraBinding.this.setLoaderState(View.VISIBLE);
+			me.setLoaderState(View.VISIBLE);
 		}
 
 		@Override
@@ -162,10 +156,10 @@ public class IPCameraBinding extends AbstractBinding {
 
 		protected void onPostExecute(Void result) {
 			// Update loader of all listeners
-			IPCameraBinding.this.setLoaderState(View.INVISIBLE);
+			me.setLoaderState(View.INVISIBLE);
 			if (this.snapshot != null) {
-				IPCameraBinding.this.currentImage = this.snapshot;
-				IPCameraBinding.this.updateViews();
+				me.currentImage = this.snapshot;
+				me.updateViews();
 			}
 		}
 	}
@@ -177,14 +171,14 @@ public class IPCameraBinding extends AbstractBinding {
 		}
 
 		protected void onPreExecute() {
-			IPCameraBinding.this.setLoaderState(View.VISIBLE);
+			me.setLoaderState(View.VISIBLE);
 		}
 
 		@Override
 		protected void onPostExecute(JSONMessage result) {
 
-			IPCameraBinding.this.setLoaderState(View.GONE);
-			IPCameraBinding.this.handleMessage(result);
+			me.setLoaderState(View.GONE);
+			me.handleMessage(result);
 
 		}
 	}

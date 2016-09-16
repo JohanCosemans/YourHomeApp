@@ -26,6 +26,8 @@
  */
 package net.yourhome.app.bindings;
 
+import android.util.Log;
+
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,12 +42,6 @@ import net.yourhome.common.net.messagestructures.JSONMessage;
 import net.yourhome.common.net.model.binding.ControlIdentifiers;
 
 public abstract class AbstractBinding {
-
-	// protected HomeServerConnector connector =
-	// HomeServerConnector.getInstance();
-
-	// protected BindingController bindingController =
-	// BindingController.getInstance();
 
 	// Value type: dimmer, switch, sensor, music control, ...
 	protected ValueTypes valueType = ValueTypes.UNKNOWN;
@@ -71,8 +67,6 @@ public abstract class AbstractBinding {
 		this.stageElementId = stageElementId;
 		this.valueType = ValueTypes.convert(bindingProperties.getString("valueType"));
 		this.controlIdentifier = new ControlIdentifiers(bindingProperties);
-
-		// this.addViewListener(view);
 
 		// parse properties and initialize binding
 		this.buildBinding();
@@ -115,6 +109,7 @@ public abstract class AbstractBinding {
 		if (this.viewListeners != null) {
 			for (DynamicView v : this.viewListeners) {
 				if (v != null) {
+                    Log.d("AbstractBinding", "setLoaderState: setting loader state"+v.toString());
 					v.setLoaderState(state);
 				} else {
 					this.viewListeners.remove(v);

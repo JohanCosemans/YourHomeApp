@@ -32,6 +32,9 @@ e.g. turn off all lights and devices when you leave and set the temperature lowe
 ![App](http://yourhomeapp.net/images/controller/controller-floor-0.png)
 
 * Git: https://github.com/JohanCosemans/YourHomeApp
+* Play store (support version): https://play.google.com/store/apps/details?id=net.yourhomeapp.plus
+* Play store: https://play.google.com/store/apps/details?id=net.yourhomeapp.free
+
 
 # More information
 * Website: http://www.yourhomeapp.net

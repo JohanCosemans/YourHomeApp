@@ -56,13 +56,11 @@ public class ButtonView extends DynamicView {
 	protected RelativeLayout layout;
 	protected ImageButton button;
 	protected RelativeLayout.LayoutParams params;
-	// protected AbstractBinding binding;
 
 	public ButtonView(CanvasFragment canvas, String stageItemId, JSONObject viewProperties, JSONObject bindingProperties) throws JSONException {
 		super(canvas, stageItemId, viewProperties, bindingProperties);
 		this.buildView(viewProperties);
 		this.addBinding(bindingProperties);
-		// refreshView();
 	}
 
 	public void setBackgroundColor(int c) {

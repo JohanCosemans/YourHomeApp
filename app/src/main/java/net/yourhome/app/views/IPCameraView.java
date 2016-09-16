@@ -36,6 +36,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
@@ -50,36 +51,47 @@ import net.yourhome.app.net.HomeServerConnector;
 import net.yourhome.app.util.Configuration;
 import net.yourhome.app.util.Util;
 import net.yourhome.app.views.UIEvent.Types;
+import net.yourhome.common.net.model.viewproperties.Camera;
+import net.yourhome.common.net.model.viewproperties.Property;
+import net.yourhome.common.net.model.viewproperties.SensorWithIndicator;
 
 public class IPCameraView extends ButtonView {
+
+    // Properties
+    //private Boolean liveStream;
+    private Boolean hideRefreshButton;
+    private volatile Boolean hideLoadingIcon;
+    private Integer refreshDelaySeconds;
 
 	public IPCameraView(CanvasFragment canvas, String stageItemId, JSONObject viewProperties, JSONObject bindingProperties) throws JSONException {
 		super(canvas, stageItemId, viewProperties, bindingProperties);
 		this.loader = new ProgressBar(canvas.getActivity());
 		this.layout.addView(this.loader);
-		this.setLoaderState(View.GONE);
+        this.setLoaderState(View.GONE);
 	}
 
 	@Override
 	public void setLoaderState(final int state) {
-		if (this.canvas == null || this.canvas.getActivity() == null) {
-			Context mainContext = HomeServerConnector.getInstance().getMainContext();
-			if (mainContext != null && mainContext instanceof Activity) {
-				((Activity) mainContext).runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						IPCameraView.this.loader.setVisibility(state);
-					}
-				});
-			}
-		} else {
-			this.canvas.getActivity().runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					IPCameraView.this.loader.setVisibility(state);
-				}
-			});
-		}
+        if (state == View.GONE || !hideLoadingIcon) {
+            if (this.canvas == null || this.canvas.getActivity() == null) {
+                Context mainContext = HomeServerConnector.getInstance().getMainContext();
+                if (mainContext != null && mainContext instanceof Activity) {
+                    ((Activity) mainContext).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            IPCameraView.this.loader.setVisibility(state);
+                        }
+                    });
+                }
+            } else {
+                this.canvas.getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        IPCameraView.this.loader.setVisibility(state);
+                    }
+                });
+            }
+        }
 	}
 
 	public void setOnClickListener(final Activity activity) {
@@ -99,6 +111,12 @@ public class IPCameraView extends ButtonView {
 	public void addBinding(JSONObject bindingProperties) {
 		this.binding = BindingController.getInstance().getBindingFor(this.getStageElementId());
 		this.binding.addViewListener(this);
+
+        // Set properties in binding
+        if(this.binding instanceof IPCameraBinding) {
+            Log.d("IPCameraView", "addBinding: setting refresh delay in "+this.toString());
+            ((IPCameraBinding)this.binding).setRefreshDelay(refreshDelaySeconds*1000);
+        }
 	}
 
 	public static void createBinding(String stageItemId, JSONObject bindingProperties) {
@@ -112,22 +130,35 @@ public class IPCameraView extends ButtonView {
 	@Override
 	public void buildView(JSONObject viewProperties) throws JSONException {
 		super.buildView(viewProperties);
-		Bitmap refreshBitmap = Configuration.getInstance().getAppIcon(HomeServerConnector.getInstance().getMainContext(), R.string.icon_refresh, 30, Color.WHITE);
+
+        Log.d("IPCameraView", "buildView: setting properties in "+this.toString());
+        Property hideRefreshProperty = this.properties.get(Camera.HIDE_REFRESH_BUTTON);
+        this.hideRefreshButton = hideRefreshProperty != null?hideRefreshProperty.getValue().toLowerCase().equals("true"):false;
+
+        Property hideLoadingIconProperty = this.properties.get(Camera.HIDE_LOADING_ICON);
+        this.hideLoadingIcon = hideLoadingIconProperty != null?hideLoadingIconProperty.getValue().toLowerCase().equals("true"):false;
+
+        Property refreshDelaySecondsProperty = this.properties.get(Camera.REFRESH_DELAY_S);
+        this.refreshDelaySeconds = refreshDelaySecondsProperty != null?((Long) Math.round(Double.valueOf(refreshDelaySecondsProperty.getValue()))).intValue():600;
+
+        Bitmap refreshBitmap = Configuration.getInstance().getAppIcon(HomeServerConnector.getInstance().getMainContext(), R.string.icon_refresh, 30, Color.WHITE);
 		Bitmap refreshBitmapShadow = Util.addShadow(refreshBitmap, refreshBitmap.getHeight(), refreshBitmap.getWidth(), Color.BLACK, 1, 1, 1);
 
-		ImageButton refreshButton = new ImageButton(this.canvas.getActivity());
-		RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-		params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-		params.setMargins(0, 0, 10, 10);
-		refreshButton.setBackground(new BitmapDrawable(HomeServerConnector.getInstance().getMainContext().getResources(), refreshBitmapShadow));
-		this.layout.addView(refreshButton, params);
-		refreshButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				((IPCameraBinding) IPCameraView.this.binding).refreshSnapshot();
-			}
-		});
+        if(!hideRefreshButton) {
+            ImageButton refreshButton = new ImageButton(this.canvas.getActivity());
+            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+            params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+            params.setMargins(0, 0, 10, 10);
+            refreshButton.setBackground(new BitmapDrawable(HomeServerConnector.getInstance().getMainContext().getResources(), refreshBitmapShadow));
+            this.layout.addView(refreshButton, params);
+            refreshButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ((IPCameraBinding) IPCameraView.this.binding).refreshSnapshot();
+                }
+            });
+        }
 	}
 
 	@Override
