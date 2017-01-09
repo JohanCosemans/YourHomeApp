@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -52,6 +52,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
@@ -84,6 +85,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import net.yourhome.app.R;
 import net.yourhome.app.bindings.BindingController;
+import net.yourhome.app.bindings.PageNavigationBinding;
 import net.yourhome.app.bindings.ValueBinding;
 import net.yourhome.app.net.HomeServerConnector;
 import net.yourhome.app.net.discovery.DiscoveryActivity;
@@ -98,18 +100,12 @@ import net.yourhome.app.views.UIEvent;
 import net.yourhome.common.net.messagestructures.general.GCMRegistrationMessage;
 
 public class CanvasActivity extends FragmentActivity {
+    public enum CanvasEvents {
+        CONNECTION_STATUS_CHANGE,
+        PAGE_NAVIGATION
+    }
 	public enum LoadingStatus {
-		ERROR("error"), CONNECTING("connecting"), CONNECTED("connected"), UNKNOWN("unknown");
-
-		LoadingStatus(String status) {
-			this.status = status;
-		}
-
-		private String status;
-
-		public String convert() {
-			return this.status;
-		}
+		ERROR, CONNECTING, CONNECTED, UNKNOWN;
 	}
 
 	private final String HIDE_STATUSBAR = "net.yourhome.app.canvas.HIDE_STATUSBAR";
@@ -120,14 +116,12 @@ public class CanvasActivity extends FragmentActivity {
 	private ViewPager mViewPager;
 	private String TAG = "CanvasActivity";
 	private HomeServerConnector homeServerConnector;
-	// private boolean wifiConnected;
 
 	private Map<String, List<ValueBinding>> activityResultListeners = new HashMap<String, List<ValueBinding>>();
 
 	// Google cloud messaging
 	private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 	private GoogleCloudMessaging gcm;
-	// private AtomicInteger msgId = new AtomicInteger();
 	private String regid;
 	public static final String EXTRA_MESSAGE = "message";
 	public static final String PROPERTY_REG_ID = "registration_id";
@@ -147,38 +141,51 @@ public class CanvasActivity extends FragmentActivity {
 	private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			String action = intent.getAction();
-			Log.d(CanvasActivity.this.TAG, action);
-			CanvasActivity.this.setLoadingStatus(action);
-			if (action.equals(LoadingStatus.CONNECTED.convert())) {
-				// Send Google Cloud Messaging registration ID
-				GCMRegistrationMessage registrationMessage = new GCMRegistrationMessage(CanvasActivity.this.regid, Configuration.getInstance().getDeviceName());
-				Point currentCanvasSize = new Point();
-				WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-				Display display = wm.getDefaultDisplay();
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-					display.getRealSize(currentCanvasSize);
-				} else {
-					display.getSize(currentCanvasSize);
-				}
-				registrationMessage.screenWidth = currentCanvasSize.x;
-				registrationMessage.screenHeight = currentCanvasSize.y;
+            CanvasActivity.CanvasEvents intentAction = CanvasEvents.valueOf(intent.getAction());
+            switch(intentAction) {
+                case CONNECTION_STATUS_CHANGE:
+                    LoadingStatus status = LoadingStatus.valueOf(intent.getStringExtra(HomeServerConnector.CONNECTION_STATUS));
+                    CanvasActivity.this.setLoadingStatus(status);
+                    if (status.equals(LoadingStatus.CONNECTED)) {
+                        // Send Google Cloud Messaging registration ID
+                        GCMRegistrationMessage registrationMessage = new GCMRegistrationMessage(CanvasActivity.this.regid, Configuration.getInstance().getDeviceName());
+                        Point currentCanvasSize = new Point();
+                        WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+                        Display display = wm.getDefaultDisplay();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                            display.getRealSize(currentCanvasSize);
+                        } else {
+                            display.getSize(currentCanvasSize);
+                        }
+                        registrationMessage.screenWidth = currentCanvasSize.x;
+                        registrationMessage.screenHeight = currentCanvasSize.y;
 
-				try {
-					CanvasActivity.this.homeServerConnector.sendCommand(registrationMessage);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
+                        try {
+                            CanvasActivity.this.homeServerConnector.sendCommand(registrationMessage);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+                case PAGE_NAVIGATION:
+                    Integer fragmentPosition = canvasFragmentAdapter.getPositionOf(intent.getStringExtra(PageNavigationBinding.PAGE_ID));
+                    if(fragmentPosition != null) {
+                        me.goToFragment(fragmentPosition);
+                    }else {
+                        Log.e(TAG,"Could not find fragment with pageId "+intent.getStringExtra(PageNavigationBinding.PAGE_ID));
+                    }
+                    break;
+            }
+
 		};
 	};
 
 	private LoadingStatus lastStatus = LoadingStatus.UNKNOWN;
 
-	private void setLoadingStatus(String status) {
+	private void setLoadingStatus(LoadingStatus status) {
 		ImageView statusIcon = (ImageView) this.me.findViewById(R.id.connectionStatusIcon);
-		if (!status.equals(this.lastStatus.convert())) {
-			if (status.equals(LoadingStatus.ERROR.convert()) || status.equals(LoadingStatus.CONNECTING.convert())) {
+		if (!status.equals(this.lastStatus)) {
+			if (status.equals(LoadingStatus.ERROR) || status.equals(LoadingStatus.CONNECTING)) {
 				Log.d(this.TAG, "[UI] Received disconnect");
 
 				Bitmap loadingIcon = Configuration.getInstance().getAppIcon(getBaseContext(), R.string.icon_spinner, 40, Color.WHITE);
@@ -192,7 +199,7 @@ public class CanvasActivity extends FragmentActivity {
 				statusIcon.setImageBitmap(loadingIconShadow);
 				statusIcon.setVisibility(View.VISIBLE);
 				statusIcon.startAnimation(rotate);
-			} else if (status.equals(LoadingStatus.CONNECTED.convert())) {
+			} else if (status.equals(LoadingStatus.CONNECTED)) {
 				Log.d(this.TAG, "[UI] Received connected");
 				statusIcon.clearAnimation();
 				statusIcon.setImageResource(0);
@@ -256,10 +263,11 @@ public class CanvasActivity extends FragmentActivity {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 			uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
 			uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+            uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
 			uiOptions |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
 			uiOptions |= View.SYSTEM_UI_FLAG_FULLSCREEN;
-			uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
-			uiOptions |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            //uiOptions |= View.SYSTEM_UI_FLAG_IMMERSIVE;
+            uiOptions |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
 		} else {
 			uiOptions |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
 			uiOptions |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
@@ -602,16 +610,19 @@ public class CanvasActivity extends FragmentActivity {
 	private class DrawerItemClickListener implements ListView.OnItemClickListener {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            CanvasActivity.this.mDrawerLayout.closeDrawer(CanvasActivity.this.mDrawerList);
 			if (position != parent.getChildCount() - 1) {
-				CanvasActivity.this.mViewPager.setCurrentItem(position + CanvasActivity.this.canvasFragmentAdapter.getRealCount() * CanvasFragmentAdapter.LOOPS_COUNT / 2);
-				CanvasActivity.this.mDrawerLayout.closeDrawer(CanvasActivity.this.mDrawerList);
+                goToFragment(position);
 			} else {
-				CanvasActivity.this.mDrawerLayout.closeDrawer(CanvasActivity.this.mDrawerList);
 				startActivity(new Intent(CanvasActivity.this.me, DiscoveryActivityImp.class));
 				CanvasActivity.this.me.finish();
 			}
 		}
 	}
+    public void goToFragment(int position) {
+        this.mViewPager.setCurrentItem(position + CanvasActivity.this.canvasFragmentAdapter.getRealCount() * CanvasFragmentAdapter.LOOPS_COUNT / 2);
+
+    }
 
 	private class CanvasActivityLoader extends IPHostnameChecker {
 
@@ -786,10 +797,10 @@ public class CanvasActivity extends FragmentActivity {
 
 				// Register UI event listeners
 				IntentFilter filter = new IntentFilter();
-				filter.addAction(LoadingStatus.CONNECTED.convert());
-				filter.addAction(LoadingStatus.ERROR.convert());
-				filter.addAction(LoadingStatus.CONNECTING.convert());
-				LocalBroadcastManager.getInstance(CanvasActivity.this.me).registerReceiver(CanvasActivity.this.mMessageReceiver, filter);
+                for(CanvasActivity.CanvasEvents event : CanvasActivity.CanvasEvents.values()){
+                    filter.addAction(event.name());
+                }
+                LocalBroadcastManager.getInstance(CanvasActivity.this.me).registerReceiver(CanvasActivity.this.mMessageReceiver, filter);
 
 				connectorThread.start();
 

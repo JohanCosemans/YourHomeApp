@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -111,17 +111,24 @@ public class BindingController {
 		return this.bindingsByController.get(controllerIdentifier);
 	}
 
+    private JSONMessage toJSONMessage(String data) {
+        try {
+            JSONObject jsonObject = new JSONObject(data);
+            JSONMessage message = MessageTypes.getMessage(jsonObject);
+            if (message != null) {
+                this.handleCommand(message);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e("HomeServerConnector", "Could not parse incoming message: " + data);
+        }
+        return null;
+    }
 	public void handleCommand(String data) {
-		try {
-			JSONObject jsonObject = new JSONObject(data);
-			JSONMessage message = MessageTypes.getMessage(jsonObject);
-			if (message != null) {
-				this.handleCommand(message);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			Log.e("HomeServerConnector", "Could not parse incoming message: " + data);
-		}
+        JSONMessage message = toJSONMessage(data);
+        if (message != null) {
+            this.handleCommand(message);
+        }
 	}
 
 	public void handleCommand(JSONMessage message) {
@@ -154,6 +161,16 @@ public class BindingController {
 	public void sendMessage(JSONMessage message) {
 		HomeServerConnector.getInstance().sendCommand(message);
 	}
+
+    public JSONMessage sendSyncMessage(JSONMessage message) {
+        try {
+            String resultString = HomeServerConnector.getInstance().sendSyncMessage(message);
+            return toJSONMessage(resultString);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
 	public void destroy() {
 		for (AbstractBinding binding : this.bindingByStageElementId.values()) {

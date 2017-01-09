@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -33,6 +33,7 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import net.yourhome.app.util.JSONMessageCaller;
 import net.yourhome.app.views.ButtonView;
 import net.yourhome.app.views.DynamicView;
 import net.yourhome.app.views.MultiStateButtonView;
@@ -124,7 +125,7 @@ public class MusicPlayerBinding extends AbstractBinding {
 	}
 
 	@Override
-	public void viewPressed(DynamicView v, UIEvent event) {
+	public boolean viewPressed(DynamicView v, UIEvent event) {
 		if (v instanceof PlaylistView) {
 			if (event.getType() == UIEvent.Types.SET_VALUE) {
 				SetValueMessage setValueMessage = new SetValueMessage();
@@ -142,9 +143,15 @@ public class MusicPlayerBinding extends AbstractBinding {
 			activationMessage.controlIdentifiers = this.getControlIdentifier();
 			BindingController.getInstance().sendMessage(activationMessage);
 		}
+        return true;
 	}
 
-	@Override
+    @Override
+    public boolean viewPressed(DynamicView v, UIEvent event, JSONMessageCaller apiCaller) {
+        return false;
+    }
+
+    @Override
 	public void viewLongPressed(DynamicView v, UIEvent event) {
 		// TODO Auto-generated method stub
 	}

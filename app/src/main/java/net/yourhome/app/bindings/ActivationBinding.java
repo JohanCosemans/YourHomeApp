@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -26,9 +26,12 @@
  */
 package net.yourhome.app.bindings;
 
+import android.os.AsyncTask;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import net.yourhome.app.util.JSONMessageCaller;
 import net.yourhome.app.views.DynamicView;
 import net.yourhome.app.views.UIEvent;
 import net.yourhome.common.net.messagestructures.JSONMessage;
@@ -52,14 +55,30 @@ public class ActivationBinding extends AbstractBinding {
 	}
 
 	@Override
-	public void viewPressed(DynamicView v, UIEvent event) {
+	public boolean viewPressed(DynamicView v, UIEvent event) {
 		// Send activation message to controller
-		ActivationMessage activationMessage = new ActivationMessage();
-		activationMessage.controlIdentifiers = this.getControlIdentifier();
-		BindingController.getInstance().sendMessage(activationMessage);
+		BindingController.getInstance().sendMessage(buildMessage(v,event));
+        return true;
 	}
+    @Override
+    public boolean viewPressed(DynamicView v, UIEvent event, JSONMessageCaller apiCaller) {
+        apiCaller.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, buildMessage(v,event));
+        return true;
+    }
 
-	@Override
+    private JSONMessage buildMessage(DynamicView v,UIEvent event) {
+        ActivationMessage activationMessage = new ActivationMessage();
+        activationMessage.controlIdentifiers = this.getControlIdentifier();
+        if(event != null
+                && event.getProperty("protected") != null
+                && (Boolean)event.getProperty("protected")) {
+            activationMessage.isProtected = (Boolean)event.getProperty("protected");
+            activationMessage.protectionCode = (String)event.getProperty("protectionCode");
+        }
+        return activationMessage;
+    }
+
+    @Override
 	public void viewLongPressed(DynamicView v, UIEvent event) {
 		// TODO Auto-generated method stub
 

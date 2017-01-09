@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -59,6 +59,7 @@ import net.yourhome.app.views.DynamicView;
 import net.yourhome.app.views.IPCameraView;
 import net.yourhome.app.views.MultiStateButtonView;
 import net.yourhome.app.views.PictureView;
+import net.yourhome.app.views.PinActivity;
 import net.yourhome.app.views.PlusMinView;
 import net.yourhome.app.views.SensorView;
 import net.yourhome.app.views.ShapeView;
@@ -187,11 +188,17 @@ public class CanvasFragment extends Fragment {
 							break;
 						case SHAPE:
 							ShapeView shapeView = new ShapeView(this, stageElementId, viewProperties, bindingProperties);
+                            if(shapeView.isProtectedView() && shapeView.hasBinding()) {
+                                shapeView.setOnClickListener(getActivity(), PinActivity.class);
+                            }
 							this.view.addView(shapeView.getView());
 							this.allViews.add(shapeView);
 							break;
 						case IMAGE_BUTTON:
 							ButtonView buttonView = new ButtonView(this, stageElementId, viewProperties, bindingProperties);
+                            if(buttonView.isProtectedView() && buttonView.hasBinding()) {
+                                buttonView.setOnClickListener(getActivity(), PinActivity.class);
+                            }
 							this.view.addView(buttonView.getView());
 							this.allViews.add(buttonView);
 							break;

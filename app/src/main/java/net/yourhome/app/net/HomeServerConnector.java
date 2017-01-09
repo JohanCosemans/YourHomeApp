@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -27,9 +27,12 @@
 package net.yourhome.app.net;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -45,6 +48,7 @@ import org.apache.http.params.HttpParams;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import net.yourhome.app.bindings.BindingController;
@@ -54,16 +58,11 @@ import net.yourhome.common.net.messagestructures.JSONMessage;
 
 public class HomeServerConnector {
 
+    public static final String CONNECTION_STATUS="connectionStatus";
 	private String TAG = "HomeServerConnector";
 	private HomeServerSocketHandler homeHandler;
 	private Context mainContext;
-	// private SpotifyBindingController spotifyController;
-	// private RadioBindingController radioController;
-	// private ZWaveBindingController zwaveBindingController;
-	// private GeneralController generalController;
-	// private IPCameraBindingController ipCameraController;
 	private HomeServerConnector me = this;
-	// private Map<Integer,IBinding> returningMessages;
 	public static final int DEFAULT_HTTP_TIMEOUT = 6000;
 	public static final int DEFAULT_SO_TIMEOUT = 4000;
 	private boolean isConnected = false;
@@ -81,24 +80,12 @@ public class HomeServerConnector {
 	}
 
 	private HomeServerConnector() {
-		/*
-		 * spotifyController = SpotifyBindingController.getInstance();
-		 * radioController = RadioBindingController.getInstance();
-		 * zwaveBindingController = ZWaveBindingController.getInstance();
-		 * generalController = GeneralController.getInstance();
-		 * ipCameraController = IPCameraBindingController.getInstance();
-		 */
 		this.bindingController = BindingController.getInstance();
 	}
 
 	public void setMainContext(Context context) {
 		this.mainContext = context;
-
-		// this.mainContext.runOnUiThread(new Runnable() {
-		// public void run() {
 		this.homeHandler = new HomeServerSocketHandler(this.me);
-		// }
-		// });
 	}
 
 	public Context getMainContext() {
@@ -108,11 +95,6 @@ public class HomeServerConnector {
 	public void destroy() {
 		this.mainContext = null;
 		this.homeHandler = null;
-		// spotifyController = null;
-		// radioController = null;
-		// zwaveBindingController = null;
-		// generalController = null;
-		// ipCameraController = null;
 	}
 
 	public void connect() {
@@ -121,7 +103,8 @@ public class HomeServerConnector {
 		this.isConnected = false;
 
 		// Send connecting UI event
-		Intent intent = new Intent(CanvasActivity.LoadingStatus.CONNECTING.convert());
+		Intent intent = new Intent(CanvasActivity.CanvasEvents.CONNECTION_STATUS_CHANGE.name());
+        intent.putExtra(CONNECTION_STATUS,CanvasActivity.LoadingStatus.CONNECTING.name());
 		LocalBroadcastManager.getInstance(this.mainContext).sendBroadcast(intent);
 
 		// Connect to websocket
@@ -148,7 +131,9 @@ public class HomeServerConnector {
 
 		try {
 			Thread.sleep(2000);
-			Intent intent = new Intent(CanvasActivity.LoadingStatus.CONNECTING.convert());
+
+			Intent intent = new Intent(CanvasActivity.CanvasEvents.CONNECTION_STATUS_CHANGE.name());
+            intent.putExtra(CONNECTION_STATUS,CanvasActivity.LoadingStatus.CONNECTING.name());
 			LocalBroadcastManager.getInstance(this.mainContext).sendBroadcast(intent);
 		} catch (InterruptedException e1) {
 		}
@@ -181,8 +166,9 @@ public class HomeServerConnector {
 	public void processConnected() {
 		if (!this.isConnected) {
 			// Send connected UI event
-			Intent connectedintent = new Intent(CanvasActivity.LoadingStatus.CONNECTED.convert());
-			LocalBroadcastManager.getInstance(this.mainContext).sendBroadcast(connectedintent);
+			Intent intent = new Intent(CanvasActivity.CanvasEvents.CONNECTION_STATUS_CHANGE.name());
+            intent.putExtra(CONNECTION_STATUS,CanvasActivity.LoadingStatus.CONNECTED.name());
+			LocalBroadcastManager.getInstance(this.mainContext).sendBroadcast(intent);
 		}
 		this.isConnected = true;
 	}
@@ -194,24 +180,24 @@ public class HomeServerConnector {
 		if (this.initiateReconnection) {
 
 			// Alert that the connection has dropped to the main activity UI
-			Intent intent = new Intent(CanvasActivity.LoadingStatus.ERROR.convert());
+			Intent intent = new Intent(CanvasActivity.CanvasEvents.CONNECTION_STATUS_CHANGE.name());
+            intent.putExtra(CONNECTION_STATUS,CanvasActivity.LoadingStatus.ERROR.name());
 			LocalBroadcastManager.getInstance(this.mainContext).sendBroadcast(intent);
 			this.isConnected = false;
-			Log.d(this.TAG, "Initiate reconnection");
 			try {
 				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-			}
+			} catch (InterruptedException e) {}
+            Log.d(this.TAG, "Initiate reconnection");
 			this.reconnect();
 
 		}
 	}
 
-	public String sendSyncMessage(JSONMessage message) throws Exception {
+	public String sendSyncMessage(JSONMessage message) throws IOException, URISyntaxException {
 		return this.sendSyncMessage(message, HomeServerConnector.DEFAULT_HTTP_TIMEOUT);
 	}
 
-	public String sendSyncMessage(JSONMessage message, int timeout) throws Exception {
+	public String sendSyncMessage(JSONMessage message, int timeout) throws IOException, URISyntaxException {
 		Configuration configuration = Configuration.getInstance();
 
 		String url = configuration.getHomeServerProtocol() + "://" + configuration.getHomeServerHostName(this.mainContext) + ":" + configuration.getHomeServerPort(this.mainContext) + "/api/messagehandler";
@@ -250,7 +236,7 @@ public class HomeServerConnector {
 	}
 
 	// POST
-	public String getStringContent(String uri, String postData, HashMap<String, String> headers, int timeout) throws Exception {
+	public String getStringContent(String uri, String postData, HashMap<String, String> headers, int timeout) throws URISyntaxException, IOException {
 
 		HttpClient client = new DefaultHttpClient();
 		HttpParams httpParams = client.getParams();
@@ -282,11 +268,11 @@ public class HomeServerConnector {
 		return this.processResponse(response);
 	}
 
-	private String processResponse(HttpResponse response) throws Exception {
+	private String processResponse(HttpResponse response) throws IOException {
 		InputStream ips = response.getEntity().getContent();
 		BufferedReader buf = new BufferedReader(new InputStreamReader(ips, "UTF-8"));
 		if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-			throw new Exception(response.getStatusLine().getReasonPhrase());
+			throw new IOException(response.getStatusLine().getReasonPhrase());
 		}
 		StringBuilder sb = new StringBuilder();
 		String s;

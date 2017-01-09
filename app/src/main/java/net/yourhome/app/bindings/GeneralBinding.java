@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -46,6 +46,7 @@ import net.yourhome.app.canvas.ipcamera.IPCameraActivity;
 import net.yourhome.app.gcm.RefreshNotificationActivity;
 import net.yourhome.app.net.HomeServerConnector;
 import net.yourhome.app.util.Configuration;
+import net.yourhome.app.util.JSONMessageCaller;
 import net.yourhome.app.util.ThermostatEndDatePickerActivity;
 import net.yourhome.app.util.Util;
 import net.yourhome.app.views.DynamicView;
@@ -100,10 +101,16 @@ public class GeneralBinding extends AbstractBinding {
 	}
 
 	@Override
-	public void viewPressed(DynamicView v, UIEvent event) {
+	public boolean viewPressed(DynamicView v, UIEvent event) {
+        return true;
 	}
 
-	@Override
+    @Override
+    public boolean viewPressed(DynamicView v, UIEvent event, JSONMessageCaller apiCaller) {
+        return false;
+    }
+
+    @Override
 	public void viewLongPressed(DynamicView v, UIEvent event) {
 	}
 

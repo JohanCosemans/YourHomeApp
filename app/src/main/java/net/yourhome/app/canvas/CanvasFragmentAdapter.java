@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -26,8 +26,11 @@
  */
 package net.yourhome.app.canvas;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -58,10 +61,11 @@ import net.yourhome.common.base.enums.ViewTypes;
 
 public class CanvasFragmentAdapter extends FragmentPagerAdapter {
 
-	// private List<Fragment> fragments = new ArrayList<Fragment>();
+    private int realCount = -1;
 	private JSONObject activeConfiguration;
+    private Map<String,Integer> pageIndexes = new HashMap<>();
+
 	public static int LOOPS_COUNT = 10000;
-	private int realCount = -1;
 
 	public CanvasFragmentAdapter(FragmentManager fm, JSONObject activeConfiguration) {
 		super(fm);
@@ -84,8 +88,9 @@ public class CanvasFragmentAdapter extends FragmentPagerAdapter {
 						page = pages.getJSONObject(i);
 						String title = page.getString("title");
 						menuList.add(title);
+                        pageIndexes.put(page.getString("pageId"),i);
 
-						// Initialize all bindings when we're at it
+						// Initialize all bindings
 						JSONArray viewObjects = page.getJSONArray("objects");
 						for (int j = 0; j < viewObjects.length(); j++) {
 							try {
@@ -108,6 +113,7 @@ public class CanvasFragmentAdapter extends FragmentPagerAdapter {
 									ShapeView.createBinding(stageObjectId, bindingProperties);
 									break;
 								case IMAGE_BUTTON:
+                                case PAGE_NAVIGATION:
 									ButtonView.createBinding(stageObjectId, bindingProperties);
 									break;
 								case SLIDER:
@@ -165,7 +171,7 @@ public class CanvasFragmentAdapter extends FragmentPagerAdapter {
 								default:
 									break;
 								}
-							} catch (JSONException e) {
+							} catch (JSONException | InvalidParameterException e) {
 								e.printStackTrace();
 							}
 						}
@@ -184,6 +190,10 @@ public class CanvasFragmentAdapter extends FragmentPagerAdapter {
 		}
 		return null;
 	}
+
+    public Integer getPositionOf(String fragmentId) {
+        return this.pageIndexes.get(fragmentId);
+    }
 
 	@Override
 	public Fragment getItem(int position) {

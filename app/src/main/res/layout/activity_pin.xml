@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:gravity="center" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <EditText
+            android:id="@+id/pin_entered_number"
+            android:layout_gravity="top|center|fill"
+            android:ems="10"
+            android:inputType="text|textPassword"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:autoText="false"
+            android:layout_centerHorizontal="true">
+
+            <requestFocus />
+        </EditText>
+    </RelativeLayout>
+
+    <GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|center"
+                android:layout_weight="1"
+                android:columnCount="6"
+                android:orientation="horizontal"
+                android:rowCount="9"
+                android:rowOrderPreserved="true"
+                android:useDefaultMargins="false"
+                android:transitionGroup="false">
+
+        <Button
+            android:id="@+id/pin_button_1"
+            android:layout_column="0"
+            android:layout_row="4"
+            android:background="@drawable/rounded_corners_no_padding"
+            android:text="1"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="2dp"
+            android:layout_width="60dp"
+            android:layout_height="50dp"/>
+
+        <Button
+            android:id="@+id/pin_button_2"
+            android:layout_column="1"
+            android:layout_row="4"
+
+            android:background="@drawable/rounded_corners_no_padding"
+            android:text="2"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="2dp"
+            android:layout_width="60dp"
+            android:layout_height="50dp"/>
+
+        <Button
+            android:id="@+id/pin_button_3"
+            android:layout_column="3"
+            android:layout_row="4"
+
+            android:background="@drawable/rounded_corners_no_padding"
+            android:text="3"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="2dp"
+            android:layout_width="60dp"
+            android:layout_height="50dp"/>
+
+        <Button
+            android:id="@+id/pin_button_4"
+            android:layout_column="0"
+            android:layout_row="5"
+
+            android:background="@drawable/rounded_corners_no_padding"
+            android:text="4"
+            android:layout_margin="2dp"
+            android:layout_width="60dp"
+            android:layout_height="50dp"/>
+
+        <Button
+            android:id="@+id/pin_button_5"
+            android:layout_column="1"
+            android:layout_row="5"
+
+            android:background="@drawable/rounded_corners_no_padding"
+            android:text="5"
+            android:layout_margin="2dp"
+            android:layout_width="60dp"
+            android:layout_height="50dp"/>
+
+        <Button
+            android:id="@+id/pin_button_6"
+            android:layout_column="3"
+            android:layout_row="5"
+            android:background="@drawable/rounded_corners_no_padding"
+            android:text="6"
+            android:layout_margin="2dp"
+            android:layout_width="60dp"
+            android:layout_height="50dp"/>
+
+        <Button
+            android:id="@+id/pin_button_7"
+            android:layout_column="0"
+            android:layout_row="6"
+            android:background="@drawable/rounded_corners_no_padding"
+            android:text="7"
+            android:layout_margin="2dp"
+            android:layout_width="60dp"
+            android:layout_height="50dp"/>
+
+        <Button
+            android:id="@+id/pin_button_8"
+            android:layout_column="1"
+            android:layout_row="6"
+
+            android:background="@drawable/rounded_corners_no_padding"
+            android:text="8"
+            android:layout_margin="2dp"
+            android:layout_width="60dp"
+            android:layout_height="50dp"/>
+
+        <Button
+            android:id="@+id/pin_button_9"
+            android:layout_column="3"
+            android:layout_row="6"
+
+            android:background="@drawable/rounded_corners_no_padding"
+            android:text="9"
+            android:layout_margin="2dp"
+            android:layout_width="60dp"
+            android:layout_height="50dp"/>
+
+        <Button
+            android:id="@+id/pin_button_0"
+            android:layout_column="1"
+            android:layout_row="7"
+
+            android:background="@drawable/rounded_corners_no_padding"
+            android:text="0"
+            android:layout_margin="2dp"
+            android:layout_width="60dp"
+            android:layout_height="50dp"/>
+
+        <ImageButton
+            android:id="@+id/pin_button_delete"
+            android:layout_column="0"
+            android:layout_row="7"
+
+            android:tint="@color/background_material_dark"
+            android:background="@drawable/rounded_corners_no_padding"
+            android:src="@android:drawable/ic_input_delete"
+            android:text="@string/btn_delete"
+            android:layout_width="60dp"
+            android:layout_height="50dp"
+            android:layout_margin="2dp"/>
+
+    </GridLayout>
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dip"
+        android:layout_marginTop="5dp"
+        android:background="?android:attr/dividerHorizontal"
+        android:layout_gravity="bottom"
+        android:layout_weight="1"
+        />
+    <LinearLayout
+        android:id="@+id/okCancel"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="false"
+        android:layout_weight="2"
+        android:gravity="bottom|center"
+        style="?android:attr/buttonBarButtonStyle"
+        android:baselineAligned="false"
+        >
+
+        <Button
+            android:id="@+id/pin_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.1"
+            android:text="@string/btn_discover_cancel"
+            style="?android:attr/buttonBarButtonStyle"/>
+
+        <Button
+            android:id="@+id/pin_ok"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.1"
+            android:text="@string/btn_ok"
+            style="?android:attr/buttonBarButtonStyle"/>
+
+    </LinearLayout>
+
+</LinearLayout>

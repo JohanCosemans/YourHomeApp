@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -34,12 +34,15 @@ import net.yourhome.app.net.HomeServerConnector;
 import net.yourhome.common.base.enums.MessageTypes;
 import net.yourhome.common.net.messagestructures.JSONMessage;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+
 public abstract class JSONMessageCaller extends AsyncTask<JSONMessage, Void, JSONMessage> {
 
-	private Configuration configuration;
-	private Context context;
+    protected Configuration configuration;
+	protected Context context;
 
-	public JSONMessageCaller(Context context) {
+    public JSONMessageCaller(Context context) {
 		this.context = context;
 	}
 
@@ -47,22 +50,28 @@ public abstract class JSONMessageCaller extends AsyncTask<JSONMessage, Void, JSO
 	protected JSONMessage doInBackground(JSONMessage... message) {
 		this.configuration = Configuration.getInstance();
 		String result = null;
-		try {
-			result = HomeServerConnector.getInstance().sendSyncMessage(message[0]);
-		} catch (Exception e) {
-			this.configuration.toggleConnectionInternalExternal(this.context);
-			try {
-				result = HomeServerConnector.getInstance().sendSyncMessage(message[0]);
-			} catch (Exception ex) {
-			}
-		}
-		try {
-			JSONObject returnObject = new JSONObject(result);
-			JSONMessage returnMessage = MessageTypes.getMessage(returnObject);
-			return returnMessage;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+        try {
+            try {
+                result = HomeServerConnector.getInstance().sendSyncMessage(message[0]);
+            } catch (IOException | URISyntaxException e) {
+                this.configuration.toggleConnectionInternalExternal(this.context);
+                try {
+                    result = HomeServerConnector.getInstance().sendSyncMessage(message[0]);
+                } catch (Exception ex) {
+                }
+            }
+            try {
+                if(result != null) {
+                    JSONObject returnObject = new JSONObject(result);
+                    JSONMessage returnMessage = MessageTypes.getMessage(returnObject);
+                    return returnMessage;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
 		return null;
 	}
 

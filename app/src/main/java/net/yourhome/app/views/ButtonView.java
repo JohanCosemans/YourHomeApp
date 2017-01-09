@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -44,6 +44,7 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import net.yourhome.app.bindings.ActivationBinding;
 import net.yourhome.app.bindings.BindingController;
+import net.yourhome.app.bindings.PageNavigationBinding;
 import net.yourhome.app.bindings.RadioBinding;
 import net.yourhome.app.canvas.CanvasFragment;
 import net.yourhome.app.util.Configuration;
@@ -53,6 +54,7 @@ import net.yourhome.common.net.model.viewproperties.Property;
 
 public class ButtonView extends DynamicView {
 
+    protected boolean protectedView;
 	protected RelativeLayout layout;
 	protected ImageButton button;
 	protected RelativeLayout.LayoutParams params;
@@ -126,16 +128,17 @@ public class ButtonView extends DynamicView {
 		this.button.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Bundle b2 = new Bundle();
-				b2.putString("nodeIdentifier", ButtonView.this.binding.getControlIdentifier().getNodeIdentifier());
-				b2.putString("valueIdentifier", ButtonView.this.binding.getControlIdentifier().getValueIdentifier());
-				b2.putString("controllerIdentifier", ButtonView.this.binding.getControlIdentifier().getControllerIdentifier().convert());
+            Bundle b2 = new Bundle();
+            b2.putString("stageElementId", ButtonView.this.binding.getStageElementId());
+            b2.putString("nodeIdentifier", ButtonView.this.binding.getControlIdentifier().getNodeIdentifier());
+            b2.putString("valueIdentifier", ButtonView.this.binding.getControlIdentifier().getValueIdentifier());
+            b2.putString("controllerIdentifier", ButtonView.this.binding.getControlIdentifier().getControllerIdentifier().convert());
 
-				// Start dialog window
-				Intent intent = new Intent(listenerContext, activityToStart);
-				intent.putExtras(b2);
+            // Start dialog window
+            Intent intent = new Intent(listenerContext, activityToStart);
+            intent.putExtras(b2);
 
-				listenerContext.startActivity(intent);
+            listenerContext.startActivity(intent);
 			}
 		});
 
@@ -188,6 +191,11 @@ public class ButtonView extends DynamicView {
 
 		this.layout.setX(this.layoutParameters.left);
 		this.layout.setY(this.layoutParameters.top);
+
+        Property protectedViewProperty = this.properties.get(net.yourhome.common.net.model.viewproperties.ImageButton.PROTECTED);
+        if(protectedViewProperty != null) {
+            protectedView = protectedViewProperty.getValue().equals("true");
+        }
 	}
 
 	@Override
@@ -231,6 +239,9 @@ public class ButtonView extends DynamicView {
 				case RADIO_STATION:
 					new RadioBinding(stageItemId, bindingProperties);
 					break;
+                    case PAGE_NAVIGATION:
+                        new PageNavigationBinding(stageItemId,bindingProperties);
+                    break;
 				default:
 					new ActivationBinding(stageItemId, bindingProperties);
 					break;
@@ -263,5 +274,9 @@ public class ButtonView extends DynamicView {
 		this.layout = null;
 		this.params = null;
 	}
+
+    public boolean isProtectedView() {
+        return protectedView;
+    }
 
 }

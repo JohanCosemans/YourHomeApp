@@ -1,2 +1,4 @@
 include ':app'
 rootProject.name = 'YourHomeApp'
+include ':YourHomeCommon'
+project(':YourHomeCommon').projectDir = new File(settingsDir, '../../YourHomeCommon')

@@ -12,7 +12,7 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * THIS SOFTWARE IS PROVIDED BY COTEQ AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
@@ -28,23 +28,32 @@ package net.yourhome.app.views;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Point;
 import android.os.Build;
+import android.text.InputType;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
+
 import net.yourhome.app.bindings.AbstractBinding;
 import net.yourhome.app.canvas.CanvasFragment;
 import net.yourhome.common.net.model.viewproperties.Property;
 
 public abstract class DynamicView {
+
 
 	public DynamicView(CanvasFragment canvas, String stageElementId, JSONObject viewProperties, JSONObject bindingProperties) throws JSONException {
 		this.stageElementId = stageElementId;
@@ -66,6 +75,10 @@ public abstract class DynamicView {
 	protected Double height;
 	protected Double left;
 	protected Double top;
+
+    public boolean hasBinding() {
+        return this.binding!=null;
+    }
 
 	public abstract View getView();
 
@@ -156,6 +169,12 @@ public abstract class DynamicView {
 		}
 	}
 
+    public Context getContext() {
+        if(canvas != null) {
+            return canvas.getContext();
+        }
+        return null;
+    }
 	public class ViewLayoutParams {
 		public int top;
 		public int left;
