@@ -26,33 +26,13 @@
  */
 package net.yourhome.app.canvas;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
@@ -68,21 +48,13 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
-import android.view.Display;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
+import android.view.*;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
-import android.widget.AdapterView;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.firebase.iid.FirebaseInstanceId;
 import net.yourhome.app.R;
 import net.yourhome.app.bindings.BindingController;
 import net.yourhome.app.bindings.PageNavigationBinding;
@@ -98,6 +70,16 @@ import net.yourhome.app.util.Util;
 import net.yourhome.app.views.ColorPickerView;
 import net.yourhome.app.views.UIEvent;
 import net.yourhome.common.net.messagestructures.general.GCMRegistrationMessage;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CanvasActivity extends FragmentActivity {
     public enum CanvasEvents {
@@ -121,14 +103,6 @@ public class CanvasActivity extends FragmentActivity {
 
 	// Google cloud messaging
 	private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-	private GoogleCloudMessaging gcm;
-	private String regid;
-	public static final String EXTRA_MESSAGE = "message";
-	public static final String PROPERTY_REG_ID = "registration_id";
-	private static final String PROPERTY_APP_VERSION = "appVersion";
-	private static final String SENDER_ID = "11576394209"; // Google project API
-															// id
-															// https://console.developers.google.com/project/11576394209/apiui/credential
 
 	// Navigation drawer
 	private DrawerLayout mDrawerLayout;
@@ -148,7 +122,7 @@ public class CanvasActivity extends FragmentActivity {
                     CanvasActivity.this.setLoadingStatus(status);
                     if (status.equals(LoadingStatus.CONNECTED)) {
                         // Send Google Cloud Messaging registration ID
-                        GCMRegistrationMessage registrationMessage = new GCMRegistrationMessage(CanvasActivity.this.regid, Configuration.getInstance().getDeviceName());
+                        GCMRegistrationMessage registrationMessage = new GCMRegistrationMessage(FirebaseInstanceId.getInstance().getToken(), Configuration.getInstance().getDeviceName());
                         Point currentCanvasSize = new Point();
                         WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
                         Display display = wm.getDefaultDisplay();
@@ -163,7 +137,7 @@ public class CanvasActivity extends FragmentActivity {
                         try {
                             CanvasActivity.this.homeServerConnector.sendCommand(registrationMessage);
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            Log.e(TAG,"Could not register device for notifications",e);
                         }
                     }
                     break;
@@ -304,21 +278,6 @@ public class CanvasActivity extends FragmentActivity {
 		CanvasActivity.addLegacyOverflowButton(getWindow());
 		super.onCreate(savedInstanceState);
 
-		// Check device for Play Services APK. If check succeeds, proceed with
-		// GCM registration.
-		if (this.checkPlayServices()) {
-			this.gcm = GoogleCloudMessaging.getInstance(this);
-			this.regid = this.getRegistrationId(this.me);
-
-			if (this.regid.isEmpty()) {
-				this.registerInBackground();
-			}
-		} else {
-			Log.i(this.TAG, "No valid Google Play Services APK found.");
-		}
-
-		// setLoadingStatus(LoadingStatus.CONNECTING.convert());
-
 		// Navigation drawer - set a custom shadow that overlays the main
 		// content when the drawer opens
 		// set up the drawer's list view with items and click listener
@@ -376,8 +335,6 @@ public class CanvasActivity extends FragmentActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		// Check device for Play Services APK.
-		this.checkPlayServices();
 	}
 
 	@Override
@@ -434,94 +391,6 @@ public class CanvasActivity extends FragmentActivity {
 	}
 
 	/**
-	 * Check the device to make sure it has the Google Play Services APK. If it
-	 * doesn't, display a dialog that allows users to download the APK from the
-	 * Google Play Store or enable it in the device's system settings.
-	 */
-	private boolean checkPlayServices() {
-		int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
-		if (resultCode != ConnectionResult.SUCCESS) {
-			if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-				GooglePlayServicesUtil.getErrorDialog(resultCode, this, CanvasActivity.PLAY_SERVICES_RESOLUTION_REQUEST).show();
-			} else {
-				Log.i(this.TAG, "This device is not supported.");
-				finish();
-			}
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * Stores the registration ID and the app versionCode in the application's
-	 * {@code SharedPreferences}.
-	 *
-	 * @param context
-	 *            application's context.
-	 * @param regId
-	 *            registration ID
-	 */
-	private void storeRegistrationId(Context context, String regId) {
-		final SharedPreferences prefs = this.getGcmPreferences(this.me);
-		int appVersion = CanvasActivity.getAppVersion(this.me);
-		Log.i(this.TAG, "Saving regId on app version " + appVersion);
-		SharedPreferences.Editor editor = prefs.edit();
-		editor.putString(CanvasActivity.PROPERTY_REG_ID, regId);
-		editor.putInt(CanvasActivity.PROPERTY_APP_VERSION, appVersion);
-		editor.apply();
-	}
-
-	/**
-	 * Gets the current registration ID for application on GCM service, if there
-	 * is one.
-	 * <p>
-	 * If result is empty, the app needs to register.
-	 *
-	 * @return registration ID, or empty string if there is no existing
-	 *         registration ID.
-	 */
-	private String getRegistrationId(Context context) {
-		final SharedPreferences prefs = this.getGcmPreferences(context);
-		String registrationId = prefs.getString(CanvasActivity.PROPERTY_REG_ID, "");
-		if (registrationId.isEmpty()) {
-			Log.i(this.TAG, "Registration not found.");
-			return "";
-		}
-		return registrationId;
-	}
-
-	/**
-	 * Registers the application with GCM servers asynchronously.
-	 * <p>
-	 * Stores the registration ID and the app versionCode in the application's
-	 * shared preferences.
-	 */
-	private void registerInBackground() {
-		new AsyncTask<Void, Void, String>() {
-			@Override
-			protected String doInBackground(Void... params) {
-				String msg = "";
-				try {
-					if (CanvasActivity.this.gcm == null) {
-						CanvasActivity.this.gcm = GoogleCloudMessaging.getInstance(CanvasActivity.this.me);
-					}
-					CanvasActivity.this.regid = CanvasActivity.this.gcm.register(CanvasActivity.SENDER_ID);
-					msg = "Device registered, registration ID=" + CanvasActivity.this.regid;
-					CanvasActivity.this.storeRegistrationId(CanvasActivity.this.me, CanvasActivity.this.regid);
-				} catch (IOException ex) {
-					msg = "Error :" + ex.getMessage();
-				}
-				Log.i(CanvasActivity.this.TAG, msg);
-				return msg;
-			}
-
-			@Override
-			protected void onPostExecute(String msg) {
-			}
-		}.execute(null, null, null);
-	}
-
-	/**
 	 * @return Application's version code from the {@code PackageManager}.
 	 */
 	private static int getAppVersion(Context context) {
@@ -537,14 +406,6 @@ public class CanvasActivity extends FragmentActivity {
 		return 0;
 	}
 
-	/**
-	 * @return Application's {@code SharedPreferences}.
-	 */
-	private SharedPreferences getGcmPreferences(Context context) {
-		return getSharedPreferences(CanvasActivity.class.getSimpleName(), Context.MODE_PRIVATE);
-	}
-
-	// // End google cloud messaging
 	public void removeActivityResultListener(ValueBinding binding) {
 		List<ValueBinding> bindings = this.activityResultListeners.get(binding.getStageElementId());
 		if (bindings != null) {

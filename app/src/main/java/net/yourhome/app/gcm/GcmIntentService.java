@@ -26,8 +26,6 @@
  */
 package net.yourhome.app.gcm;
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
@@ -59,7 +57,7 @@ public class GcmIntentService extends IntentService {
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		Bundle extras = intent.getExtras();
+		/*Bundle extras = intent.getExtras();
 		GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
 		// The getMessageType() intent parameter must be the intent you received
 		// in your BroadcastReceiver.
@@ -72,7 +70,7 @@ public class GcmIntentService extends IntentService {
 			 * ignore any message types you're not interested in, or that you
 			 * don't recognize.
 			 */
-			if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
+			/*if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
 				// sendNotification("Send error: " + extras.toString());
 			} else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED.equals(messageType)) {
 				// sendNotification("Deleted messages on server: " +
@@ -113,6 +111,6 @@ public class GcmIntentService extends IntentService {
 			}
 		}
 		// Release the wake lock provided by the WakefulBroadcastReceiver.
-		GcmBroadcastReceiver.completeWakefulIntent(intent);
+		GcmBroadcastReceiver.completeWakefulIntent(intent);*/
 	}
 }

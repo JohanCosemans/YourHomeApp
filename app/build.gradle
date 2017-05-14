@@ -1,26 +1,18 @@
 apply plugin: 'com.android.application'
+/*apply plugin: 'com.google.gms.google-services'*/
 
 android {
-    /*compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }*/
 
-    compileSdkVersion 23
-    buildToolsVersion "24.0.0"
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
 
     defaultConfig {
-        /*jackOptions {
-            enabled true
-        }*/
         applicationId "net.yourhome.app"
         minSdkVersion 16
         targetSdkVersion 23
         versionCode 5
         versionName "0.9"
-        multiDexEnabled true
-
-//        resValue "string", "google_API_key", "$System.env.GOOGLE_API_KEY"
+//        multiDexEnabled true
     }
     packagingOptions {
         exclude 'META-INF/LICENSE'
@@ -46,12 +38,12 @@ android {
         "free" {
             applicationId = "net.yourhomeapp.free"
             versionName "0.9-free"
-            versionCode 18
+            versionCode 20
         }
         "pls" {
             applicationId = "net.yourhomeapp.plus"
             versionName "0.9-plus"
-            versionCode 18
+            versionCode 20
         }
     }
 
@@ -65,6 +57,8 @@ repositories {
         url "http://dl.bintray.com/tomasvalenta/maven"
     }
     mavenCentral()
+
+    mavenLocal()
 }
 configurations.all {
     // Don't cache changing modules at all.
@@ -79,14 +73,22 @@ dependencies {
     }*/
     compile project(":YourHomeCommon")
     compile 'com.github.rtugeek:ColorSeekBar:1.0.1'
-    compile 'com.github.lecho:hellocharts-android:v1.5.8'
+    compile 'com.github.lecho:hellocharts-library:1.5.8@aar'
     compile 'org.codehaus.jackson:jackson-core-asl:1.9.7'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.7'
-    compile 'com.google.android.gms:play-services:8.4.0'
+
+    //compile 'com.google.android.gms:play-services:8.4.0'
     compile 'com.larswerkman:lobsterpicker:1.0.1'
     compile 'de.mrmaffen:vlc-android-sdk:3.0.0'
-    compile 'com.android.support:multidex:1.0.0'
-    compile 'com.google.android.gms:play-services-ads:8.4.0'
-    compile 'com.google.android.gms:play-services-auth:8.4.0'
-    compile 'com.google.android.gms:play-services-gcm:8.4.0'
+    //compile 'com.android.support:multidex:1.0.1'
+    //compile 'com.google.android.gms:play-services-ads:8.4.0'
+    //compile 'com.google.android.gms:play-services-auth:8.4.0'
+    /*compile 'com.google.android.gms:play-services-gcm:8.4.0'*/
+
+    //firebase
+    compile 'com.google.firebase:firebase-messaging:10.0.0'
+
 }
+
+//firebase
+apply plugin: 'com.google.gms.google-services'

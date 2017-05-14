@@ -7,9 +7,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
-    <!-- <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
+    <!--<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>-->
 
     <application
         android:name=".util.Application"
@@ -96,25 +95,27 @@
             android:theme="@style/FullscreenTheme"
             android:windowSoftInputMode="stateHidden|adjustResize">
         </activity>
-
-        <!-- Google cloud messaging -->
-        <receiver
-            android:name=".gcm.GcmBroadcastReceiver"
-            android:permission="com.google.android.c2dm.permission.SEND">
-            <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-
-                <category android:name="com.example.gcm"/>
-            </intent-filter>
-        </receiver>
-
-        <service android:name=".gcm.GcmIntentService"/>
-
         <activity android:name=".views.PinActivity"
                   android:label="@string/title_enter_pin"
                   android:theme="@style/Dialog"
                   android:windowSoftInputMode="stateHidden">
         </activity>
+        <!-- Firebase messaging -->
+        <service
+                android:name=".fcm.NotificationCreatorService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <meta-data
+                android:name="com.google.firebase.messaging.default_notification_icon"
+                android:resource="@drawable/ic_notification" />
+
+
+
+
+
     </application>
 
 </manifest>
