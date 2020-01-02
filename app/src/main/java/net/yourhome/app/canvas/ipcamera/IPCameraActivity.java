@@ -60,7 +60,7 @@ import net.yourhome.app.bindings.AbstractBinding;
 import net.yourhome.app.bindings.BindingController;
 import net.yourhome.app.bindings.IPCameraBinding;
 
-public class IPCameraActivity extends Activity implements IVLCVout.Callback, LibVLC.HardwareAccelerationError {
+public class IPCameraActivity extends Activity implements IVLCVout.Callback {
 
 	private static final String TAG = "IPCameraActivity";
 
@@ -241,8 +241,8 @@ public class IPCameraActivity extends Activity implements IVLCVout.Callback, Lib
 			options.add("--aout=opensles");
 			options.add("--audio-time-stretch"); // time stretching
 			options.add("-vvv"); // verbosity
-			this.libvlc = new LibVLC(options);
-			this.libvlc.setOnHardwareAccelerationError(this);
+			this.libvlc = new LibVLC(getBaseContext(), options);
+//			this.libvlc.setOnHardwareAccelerationError(this);
 			this.holder.setKeepScreenOn(true);
 
 			// Create media player
@@ -286,7 +286,7 @@ public class IPCameraActivity extends Activity implements IVLCVout.Callback, Lib
 
 	private MediaPlayer.EventListener mPlayerListener = new MyPlayerListener(this);
 
-	@Override
+/*	@Override
 	public void onNewLayout(IVLCVout vout, int width, int height, int visibleWidth, int visibleHeight, int sarNum, int sarDen) {
 		if (width * height == 0) {
 			return;
@@ -296,7 +296,7 @@ public class IPCameraActivity extends Activity implements IVLCVout.Callback, Lib
 		this.mVideoWidth = width;
 		this.mVideoHeight = height;
 		this.setSize(this.mVideoWidth, this.mVideoHeight);
-	}
+	}*/
 
 	@Override
 	public void onSurfacesCreated(IVLCVout vout) {
@@ -343,11 +343,11 @@ public class IPCameraActivity extends Activity implements IVLCVout.Callback, Lib
 		}
 	}
 
-	@Override
+	/*@Override
 	public void eventHardwareAccelerationError() {
 		// Handle errors with hardware acceleration
 		Log.e(IPCameraActivity.TAG, "Error with hardware acceleration");
 		this.releasePlayer();
 		Toast.makeText(this, "Error with hardware acceleration", Toast.LENGTH_LONG).show();
-	}
+	}*/
 }
