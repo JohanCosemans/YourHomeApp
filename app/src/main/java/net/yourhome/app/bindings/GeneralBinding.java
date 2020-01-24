@@ -39,6 +39,7 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.util.Log;
 import android.widget.Toast;
 import net.yourhome.app.R;
@@ -57,6 +58,8 @@ import net.yourhome.common.net.messagestructures.JSONMessage;
 import net.yourhome.common.net.messagestructures.general.ClientMessageMessage;
 import net.yourhome.common.net.messagestructures.general.ClientNotificationMessage;
 import net.yourhome.common.net.model.binding.ControlIdentifiers;
+
+import static net.yourhome.app.fcm.NotificationCreatorService.NOTIFICATION_CHANNEL;
 
 public class GeneralBinding extends AbstractBinding {
 
@@ -182,8 +185,16 @@ public class GeneralBinding extends AbstractBinding {
 		}
 	}
 
+	private Notification.Builder createBuilder(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return new Notification.Builder(context, NOTIFICATION_CHANNEL);
+        }else {
+            return new Notification.Builder(context);
+        }
+    }
 	private Notification createImageNotification(Context context, ClientNotificationMessage message) {
-		Notification.Builder builder = new Notification.Builder(context);
+
+        Notification.Builder builder = createBuilder(context);
 		builder.setContentTitle(message.title).setContentText(message.message).setSmallIcon(R.drawable.ic_notification);
 		Notification notification = null;
 		if (message.imagePath != null) {
@@ -194,6 +205,7 @@ public class GeneralBinding extends AbstractBinding {
 			notification.flags |= Notification.FLAG_AUTO_CANCEL;
 			notification.defaults |= Notification.DEFAULT_VIBRATE;
 			notification.defaults |= Notification.DEFAULT_SOUND;
+
 
 			// Load the image - once it's loaded, update the active
 			// notification
@@ -247,7 +259,7 @@ public class GeneralBinding extends AbstractBinding {
 	}
 
 	private Notification createTextNotification(Context context, ClientNotificationMessage message) {
-		Notification.Builder builder = new Notification.Builder(context);
+		Notification.Builder builder = createBuilder(context);
 
 		builder.setContentTitle(message.title).setContentText(message.message).setSmallIcon(R.drawable.ic_notification);
 
@@ -260,7 +272,7 @@ public class GeneralBinding extends AbstractBinding {
 	}
 
 	private Notification createDatePickerNotification(Context context, ClientNotificationMessage message) {
-		Notification.Builder builder = new Notification.Builder(context);
+		Notification.Builder builder = createBuilder(context);
 
 		builder.setContentTitle(message.title).setContentText(message.message).setSmallIcon(R.drawable.ic_notification);
 

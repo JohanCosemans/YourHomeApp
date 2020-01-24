@@ -27,6 +27,8 @@
 package net.yourhome.app.canvas;
 
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.*;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
@@ -80,6 +82,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static net.yourhome.app.fcm.NotificationCreatorService.NOTIFICATION_CHANNEL;
 
 public class CanvasActivity extends FragmentActivity {
     public enum CanvasEvents {
@@ -182,6 +186,21 @@ public class CanvasActivity extends FragmentActivity {
 		}
 	}
 
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL, NOTIFICATION_CHANNEL, importance);
+            channel.setDescription(NOTIFICATION_CHANNEL);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
 	@Override
 	protected void onRestoreInstanceState(Bundle inState) {
 		Log.d(this.TAG, "onRestoreInstanceState - " + inState);
@@ -276,6 +295,7 @@ public class CanvasActivity extends FragmentActivity {
 		SharedPreferences settings = this.me.getSharedPreferences("USER", MODE_PRIVATE);
 		setContentView(R.layout.controller_canvas_sections);
 		CanvasActivity.addLegacyOverflowButton(getWindow());
+        createNotificationChannel();
 		super.onCreate(savedInstanceState);
 
 		// Navigation drawer - set a custom shadow that overlays the main

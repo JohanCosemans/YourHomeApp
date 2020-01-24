@@ -19,6 +19,8 @@ public class NotificationCreatorService extends FirebaseMessagingService  {
 
     private static final String TAG = "NotificationCreatorService";
 
+    public static final String NOTIFICATION_CHANNEL="net.yourhome.app.fcm.main";
+
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         // [START_EXCLUDE]
