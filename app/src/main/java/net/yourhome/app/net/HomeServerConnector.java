@@ -26,35 +26,28 @@
  */
 package net.yourhome.app.net;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map.Entry;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
 import net.yourhome.app.bindings.BindingController;
 import net.yourhome.app.canvas.CanvasActivity;
 import net.yourhome.app.util.Configuration;
 import net.yourhome.common.net.messagestructures.JSONMessage;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map.Entry;
+
 
 public class HomeServerConnector {
 
@@ -68,6 +61,7 @@ public class HomeServerConnector {
 	private boolean isConnected = false;
 	private boolean initiateReconnection = true;
 	private BindingController bindingController;
+	private OkHttpClient client;
 
 	private static HomeServerConnector HomeServerConnector;
 
@@ -81,6 +75,7 @@ public class HomeServerConnector {
 
 	private HomeServerConnector() {
 		this.bindingController = BindingController.getInstance();
+		client = new OkHttpClient();
 	}
 
 	public void setMainContext(Context context) {
@@ -238,7 +233,23 @@ public class HomeServerConnector {
 	// POST
 	public String getStringContent(String uri, String postData, HashMap<String, String> headers, int timeout) throws URISyntaxException, IOException {
 
-		HttpClient client = new DefaultHttpClient();
+		RequestBody body = RequestBody.create(MediaType.parse("application/json"),postData);
+
+		Request.Builder request = new Request.Builder()
+				.url(uri)
+				.post(body);
+
+		if (headers != null) {
+			for (Entry<String, String> s : headers.entrySet()) {
+				request.addHeader(s.getKey(), s.getValue());
+			}
+		}
+
+		Call call = client.newCall(request.build());
+		Response response = call.execute();
+		return response.body().string();
+
+		/*HttpClient client = new DefaultHttpClient();
 		HttpParams httpParams = client.getParams();
 		HttpConnectionParams.setConnectionTimeout(httpParams, timeout);
 		HttpConnectionParams.setSoTimeout(httpParams, timeout);
@@ -253,22 +264,29 @@ public class HomeServerConnector {
 			}
 		}
 		HttpResponse response = client.execute(request);
-		return this.processResponse(response);
+		return this.processResponse(response);*/
 	}
 
 	// GET
 	public String getStringContent(String uri, int timeout) throws Exception {
-		HttpClient client = new DefaultHttpClient();
+		Request request = new Request.Builder()
+				.url(uri)
+				.build();
+		Call call = client.newCall(request);
+		Response response = call.execute();
+		return response.body().string();
+		/*HttpClient client = new DefaultHttpClient();
 		HttpParams httpParams = client.getParams();
 		HttpConnectionParams.setConnectionTimeout(httpParams, timeout);
 		HttpConnectionParams.setSoTimeout(httpParams, timeout);
 		HttpGet request = new HttpGet();
 		request.setURI(new URI(uri));
 		HttpResponse response = client.execute(request);
-		return this.processResponse(response);
+		return this.processResponse(response);*/
+
 	}
 
-	private String processResponse(HttpResponse response) throws IOException {
+/*	private String processResponse(HttpResponse response) throws IOException {
 		InputStream ips = response.getEntity().getContent();
 		BufferedReader buf = new BufferedReader(new InputStreamReader(ips, "UTF-8"));
 		if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
@@ -287,6 +305,6 @@ public class HomeServerConnector {
 		buf.close();
 		ips.close();
 		return sb.toString();
-	}
+	}*/
 
 }
