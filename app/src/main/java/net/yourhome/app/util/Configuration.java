@@ -38,13 +38,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.apache.http.util.ByteArrayBuffer;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -354,19 +355,7 @@ public class Configuration {
 		uconn.setReadTimeout(10000);
 		uconn.setConnectTimeout(700);
 
-		InputStream is = uconn.getInputStream();
-		BufferedInputStream bufferinstream = new BufferedInputStream(is);
-
-		ByteArrayBuffer baf = new ByteArrayBuffer(5000);
-		int current = 0;
-		while ((current = bufferinstream.read()) != -1) {
-			baf.append((byte) current);
-		}
-
-		FileOutputStream fos = new FileOutputStream(file);
-		fos.write(baf.toByteArray());
-		fos.flush();
-		fos.close();
+		IOUtils.copy(uconn.getInputStream(), new FileOutputStream(file));
 
 		if (!file.exists()) {
 			Toast.makeText(context, "Failed to download layout configuration.", Toast.LENGTH_SHORT).show();

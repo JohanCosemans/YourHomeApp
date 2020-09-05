@@ -33,10 +33,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
@@ -55,14 +53,10 @@ final public class DiscoveryActivityImp extends DiscoveryActivity {
 		String[] configurations = new String[configurationList.size()];
 		int i = 0;
 		for (net.yourhome.common.net.model.Configuration c : configurationList) {
-			if (i > 0) {
-				configurations[i] = c.getName() + " " + activity.getResources().getString(R.string.discovery_upgrade_to_plus);
-			} else {
-				if (c.getName() == null) {
-					c.setName(activity.getResources().getString(R.string.discovery_unnamed));
-				}
-				configurations[i] = c.getName();
+			if (c.getName() == null) {
+				c.setName("Unnamed");
 			}
+			configurations[i] = c.getName();
 			i++;
 		}
 		if (i == 0) {
@@ -81,27 +75,24 @@ final public class DiscoveryActivityImp extends DiscoveryActivity {
 
 			dialog.setView(noConfigurationsMessage);
 		} else {
-			dialog.setItems(configurations, new OnClickListener() {
+			dialog.setItems(configurations, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int selected) {
-					// Limitation for free edition
-					if (selected == 0) {
-						net.yourhome.common.net.model.Configuration selectedConfiguration = configurationList.get(selected);
-						// Set selection in preferences
-						SharedPreferences userDetails = activity.getSharedPreferences("USER", Context.MODE_PRIVATE);
-						Editor edit = userDetails.edit();
-						edit.putString("HOMESERVER_IP", host.ipAddress);
-						edit.putInt("HOMESERVER_PORT", host.port);
-						edit.putString("HOMESERVER_NAME", host.name);
-						edit.putString("HOMESERVER_CONFIGURATION", selectedConfiguration.getFile());
-						edit.commit();
+					net.yourhome.common.net.model.Configuration selectedConfiguration = configurationList.get(selected);
+					// Set selection in preferences
+					SharedPreferences userDetails = activity.getSharedPreferences("USER", Context.MODE_PRIVATE);
+					SharedPreferences.Editor edit = userDetails.edit();
+					edit.putString("HOMESERVER_IP", host.ipAddress);
+					edit.putInt("HOMESERVER_PORT", host.port);
+					edit.putString("HOMESERVER_NAME", host.name);
+					edit.putString("HOMESERVER_CONFIGURATION", selectedConfiguration.getFile());
+					edit.commit();
 
-						// Start canvas & load configuration
-						dialog.dismiss();
-						activity.startActivity(new Intent(activity, CanvasActivity.class));
+					// Start canvas & load configuration
+					dialog.dismiss();
+					activity.startActivity(new Intent(activity, CanvasActivity.class));
 
-						// Stop discovery activity
-						activity.finish();
-					}
+					// Stop discovery activity
+					activity.finish();
 				}
 			});
 		}

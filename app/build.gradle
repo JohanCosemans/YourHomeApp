@@ -80,6 +80,8 @@ dependencies {
     compile 'com.github.lecho:hellocharts-library:1.5.8@aar'
     compile 'org.codehaus.jackson:jackson-core-asl:1.9.7'
     compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.7'
+    compile 'commons-io:commons-io:2.6'
+
 
     //compile 'com.google.android.gms:play-services:8.4.0'
     compile 'com.larswerkman:lobsterpicker:1.0.1'
