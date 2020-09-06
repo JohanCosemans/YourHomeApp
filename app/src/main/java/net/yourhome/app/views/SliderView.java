@@ -31,8 +31,11 @@ import java.security.InvalidParameterException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -89,9 +92,6 @@ public class SliderView extends DynamicView {
 		this.minimum = Double.valueOf(this.properties.get(LineGraph.MINIMUM).getValue().toString());
 		this.maximum = Double.valueOf(this.properties.get(LineGraph.MAXIMUM).getValue().toString());
 
-		Drawable thumbDrawable = this.canvas.getActivity().getResources().getDrawable(R.drawable.slider_thumb);
-		Drawable scaledThumbDrawable = Configuration.getInstance().scaleImage(this.canvas.getActivity(), thumbDrawable, (float) Math.min(this.height / thumbDrawable.getIntrinsicHeight(), 1 * this.relativeWidthFactor));
-
 		// Layout
 		/*
 		 * params = new
@@ -121,9 +121,27 @@ public class SliderView extends DynamicView {
 			}
 		});
 
+		// Seekbar thumb
+		ViewTreeObserver vto = this.seekBar.getViewTreeObserver();
+		vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+			public boolean onPreDraw() {
+				Drawable thumbDrawable = canvas.getActivity().getResources().getDrawable(R.drawable.slider_thumb);
+				int h = (int) (seekBar.getMeasuredHeight() * 0.3); // 8 * 1.5 = 12
+				int w = h;
+				Bitmap bmpOrg = ((BitmapDrawable)thumbDrawable).getBitmap();
+				Bitmap bmpScaled = Bitmap.createScaledBitmap(bmpOrg, w, h, true);
+				Drawable newThumb = new BitmapDrawable(getContext().getResources(), bmpScaled);
+				newThumb.setBounds(0, 0, newThumb.getIntrinsicWidth(), newThumb.getIntrinsicHeight());
+				seekBar.setThumb(newThumb);
+				seekBar.setMax((int) (maximum - minimum));
+
+				seekBar.getViewTreeObserver().removeOnPreDrawListener(this);
+
+				return true;
+			}
+		});
+
 		this.seekBar.setProgressDrawable(this.canvas.getActivity().getResources().getDrawable(R.drawable.slider_background));
-		this.seekBar.setThumb(scaledThumbDrawable);
-		this.seekBar.setMax((int) (this.maximum - this.minimum));
 
 		this.relativeLayout = new RelativeLayout(this.canvas.getActivity());
 		this.params = new RelativeLayout.LayoutParams(this.layoutParameters.width, this.layoutParameters.height);

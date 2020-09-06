@@ -38,13 +38,13 @@ android {
         "free" {
             applicationId = "net.yourhomeapp.free"
             versionName "0.9-free"
-            versionCode 26
+            versionCode 27
             dimension 'version'
         }
         "pls" {
             applicationId = "net.yourhomeapp.plus"
             versionName "0.9-plus"
-            versionCode 26
+            versionCode 27
             dimension 'version'
         }
     }
